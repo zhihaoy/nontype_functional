@@ -8,6 +8,9 @@
 #define BODY() std::puts(__PRETTY_FUNCTION__)
 #endif
 
+using std23::function_ref;
+using std23::in_place_value;
+
 void foo(function_ref<int()> f)
 {
     f();
@@ -125,10 +128,4 @@ int main()
     C const cc;
     foo(c);
     foo(cc);
-
-    X my_x_obj;
-    function_ref<void()> fr{in_place_value<&X::f>, &my_x_obj};
-    fr();
-    fr = {in_place_value<&X::g>, &my_x_obj};
-    fr();
 }

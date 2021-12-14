@@ -3,6 +3,9 @@
 #include <functional>
 #include <utility>
 
+namespace std23
+{
+
 template <auto V> struct in_place_value_t
 {
     explicit in_place_value_t() = default;
@@ -125,3 +128,5 @@ template <class R, class... Args> class function_ref<R(Args...)>
         return fptr_(obj_, std::forward<Args>(args)...);
     }
 };
+
+} // namespace std23
