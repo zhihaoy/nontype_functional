@@ -6,16 +6,16 @@
 namespace std23
 {
 
-template <auto V> struct in_place_value_t
+template <auto V> struct nontype_t
 {
-    explicit in_place_value_t() = default;
+    explicit nontype_t() = default;
 };
 
-template <auto V> inline constexpr in_place_value_t<V> in_place_value{};
+template <auto V> inline constexpr nontype_t<V> nontype{};
 
 template <class R, class F, class... Args>
 requires std::is_invocable_r_v<R, F, Args...>
-constexpr R std_invoke_r(F &&f, Args &&...args) noexcept(
+constexpr R invoke_r(F &&f, Args &&...args) noexcept(
     std::is_nothrow_invocable_r_v<R, F, Args...>)
 {
     if constexpr (std::is_void_v<R>)
@@ -80,43 +80,44 @@ template <class R, class... Args> class function_ref<R(Args...)>
                        std::is_function_v<std::remove_pointer_t<T>> or
                    std::is_member_pointer_v<T>))
         : obj_(std::addressof(f)), fptr_([](storage fn_, Args... args) {
-              return std_invoke_r<R>(*get<T>(fn_), std::forward<Args>(args)...);
+              return std23::invoke_r<R>(*get<T>(fn_),
+                                        std::forward<Args>(args)...);
           })
     {
     }
 
     template <auto F>
-    constexpr function_ref(in_place_value_t<F>) noexcept requires
+    constexpr function_ref(nontype_t<F>) noexcept requires
         std::is_invocable_r_v<R, decltype(F), Args...>
         : fptr_([](storage, Args... args) {
-            return std_invoke_r<R>(F, std::forward<Args>(args)...);
+            return std23::invoke_r<R>(F, std::forward<Args>(args)...);
         })
     {
     }
 
     template <auto F, class T>
-    function_ref(in_place_value_t<F>, T &obj) noexcept requires
+    function_ref(nontype_t<F>, T &obj) noexcept requires
         std::is_invocable_r_v<R, decltype(F), decltype(obj), Args...>
         : obj_(std::addressof(obj)), fptr_([](storage this_, Args... args) {
-            return std_invoke_r<R>(F, *(get<T>(this_)),
-                                   std::forward<Args>(args)...);
+            return std23::invoke_r<R>(F, *(get<T>(this_)),
+                                      std::forward<Args>(args)...);
         })
     {
     }
 
     template <auto F, class T>
-    function_ref(in_place_value_t<F>, T *obj) noexcept requires
+    function_ref(nontype_t<F>, T *obj) noexcept requires
         std::is_invocable_r_v<R, decltype(F), decltype(obj), Args...> and
         std::is_member_pointer_v<decltype(F)>
         : obj_(obj), fptr_([](storage this_, Args... args) {
-            return std_invoke_r<R>(F, get<T>(this_),
-                                   std::forward<Args>(args)...);
+            return std23::invoke_r<R>(F, get<T>(this_),
+                                      std::forward<Args>(args)...);
         })
     {
     }
 
     template <auto F, class T>
-    function_ref(in_place_value_t<F> f,
+    function_ref(nontype_t<F> f,
                  std::reference_wrapper<T> obj) noexcept requires
         std::is_invocable_r_v<R, decltype(F), decltype(obj), Args...> and
         std::is_member_pointer_v<decltype(F)> : function_ref(f, obj.get())

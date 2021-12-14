@@ -9,7 +9,7 @@
 #endif
 
 using std23::function_ref;
-using std23::in_place_value;
+using std23::nontype;
 
 void foo(function_ref<int()> f)
 {
@@ -80,15 +80,15 @@ struct B
 constexpr int constexpr_test1()
 {
     function_ref<int()> fr;
-    fr = in_place_value<f>;  // f is not constexpr
-    fr = in_place_value<cf>; // cf is
+    fr = nontype<f>;  // f is not constexpr
+    fr = nontype<cf>; // cf is
     return fr();
 }
 
 constexpr int constexpr_test2()
 {
     B b;
-    function_ref<int(B)> fmr = in_place_value<&B::data>;
+    function_ref<int(B)> fmr = nontype<&B::data>;
     return fmr(b);
 }
 
@@ -111,16 +111,16 @@ int main()
 {
     A a;
     A const b;
-    foo(in_place_value<f>);
-    foo(in_place_value<g<int>>);
-    foo({in_place_value<&A::g>, a});
-    foo({in_place_value<&A::g>, &a});
-    foo({in_place_value<&A::k>, b});
-    foo({in_place_value<&A::k>, &b});
-    foo({in_place_value<&A::data>, a});
-    foo({in_place_value<&A::data>, std::ref(a)});
-    foo({in_place_value<&A::data>, std::cref(a)});
-    foo({in_place_value<h>, a});
+    foo(nontype<f>);
+    foo(nontype<g<int>>);
+    foo({nontype<&A::g>, a});
+    foo({nontype<&A::g>, &a});
+    foo({nontype<&A::k>, b});
+    foo({nontype<&A::k>, &b});
+    foo({nontype<&A::data>, a});
+    foo({nontype<&A::data>, std::ref(a)});
+    foo({nontype<&A::data>, std::cref(a)});
+    foo({nontype<h>, a});
 
     foo(f);
     foo([] { return BODY(); });
