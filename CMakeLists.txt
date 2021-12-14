@@ -1,9 +1,16 @@
-﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
-#
-cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required(VERSION 3.17)
+project(function_ref_nontype NONE)
+enable_language(CXX)
 
-project ("function_ref_nontype")
+add_library(function_ref_nontype INTERFACE)
+target_sources(function_ref_nontype INTERFACE "include/function_ref.h")
+set_target_properties(function_ref_nontype PROPERTIES
+    CXX_STANDARD 20
+    CXX_EXTENSIONS OFF
+    CXX_STANDARD_REQUIRED YES
+)
+target_include_directories(function_ref_nontype
+    INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
 
-# Include sub-projects.
-add_subdirectory ("function_ref_nontype")
+add_subdirectory("tests")
