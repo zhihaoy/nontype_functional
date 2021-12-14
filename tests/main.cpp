@@ -21,7 +21,7 @@ int f()
     return BODY();
 }
 
-template <class T> T g()
+template<class T> T g()
 {
     return BODY();
 }
