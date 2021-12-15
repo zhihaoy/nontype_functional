@@ -133,7 +133,7 @@ template<class Sig> class function_ref;
         template<class F, class T = std::remove_reference_t<F>>                \
         function_ref(F &&f) noexcept                                           \
             requires(_is_not_self<T, function_ref> and                         \
-                     signature::template is_lvalue_invocable_using<T_cv &>)    \
+                     signature::template is_lvalue_invocable_using<T_cv>)      \
             : obj_(std::addressof(f)), fptr_([](storage fn_, Args... args) {   \
                   return std23::invoke_r<R, T_cv &>(                           \
                       *get<T>(fn_), std::forward<Args>(args)...);              \
