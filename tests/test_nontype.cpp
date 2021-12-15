@@ -8,6 +8,8 @@ void test_nontype()
     foo(nontype<g<int>>);
     foo({nontype<&A::g>, a});
     foo({nontype<&A::g>, &a});
+    foo({nontype<&A::k>, a});
+    foo({nontype<&A::k>, &a});
     foo({nontype<&A::k>, b});
     foo({nontype<&A::k>, &b});
     foo({nontype<&A::data>, a});

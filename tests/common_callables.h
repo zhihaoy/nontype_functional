@@ -12,6 +12,7 @@
 
 using std23::function_ref;
 using std23::nontype;
+using std23::nontype_t;
 
 void foo(function_ref<int()> f);
 
