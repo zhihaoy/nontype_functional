@@ -46,6 +46,17 @@ template<class R, class... Args> struct _qual_fn_sig_common<R(Args...) noexcept>
         std::is_nothrow_invocable_r_v<R, T..., Args...>;
 };
 
+template<class R, class... Args>
+struct _qual_fn_sig_common<R(Args...) const> : _qual_fn_sig_common<R(Args...)>
+{
+};
+
+template<class R, class... Args>
+struct _qual_fn_sig_common<R(Args...) const noexcept>
+    : _qual_fn_sig_common<R(Args...) noexcept>
+{
+};
+
 template<class T>
 inline constexpr bool _is_function_pointer =
     std::is_pointer_v<T> and std::is_function_v<std::remove_pointer_t<T>>;
