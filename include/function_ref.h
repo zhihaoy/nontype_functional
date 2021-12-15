@@ -193,6 +193,18 @@ template<class Sig> class function_ref;
         {                                                                      \
             return fptr_(obj_, std::forward<Args>(args)...);                   \
         }                                                                      \
+                                                                               \
+        constexpr void swap(function_ref &other) noexcept                      \
+        {                                                                      \
+            std::swap(obj_, other.obj_);                                       \
+            std::swap(fptr_, other.fptr_);                                     \
+        }                                                                      \
+                                                                               \
+        friend constexpr void swap(function_ref &lhs,                          \
+                                   function_ref &rhs) noexcept                 \
+        {                                                                      \
+            lhs.swap(rhs);                                                     \
+        }                                                                      \
     };
 
 _FUNCTION_REF_SPECIALIZATION(R(Args...), T);
