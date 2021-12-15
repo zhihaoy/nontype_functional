@@ -20,7 +20,6 @@ void test_const()
                                 decltype([i = 0]() mutable { return i; })>);
 
     meow([] { return BODY(); });
-    meow([]() mutable { return BODY(); }); // function pointer
 
     static_assert(std::is_invocable_v<decltype(foo), C_mut>);
     static_assert(std::is_invocable_v<decltype(foo), C_mut &>);
