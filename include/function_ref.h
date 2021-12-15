@@ -142,8 +142,8 @@ template<class Sig> class function_ref;
             requires(_is_not_self<T, function_ref> and                         \
                      signature::template is_lvalue_invocable_using<T_cv>)      \
             : obj_(std::addressof(f)), fptr_([](storage fn_, Args... args) {   \
-                  return std23::invoke_r<R, T_cv &>(                           \
-                      *get<T>(fn_), std::forward<Args>(args)...);              \
+                  return std23::invoke_r<R>(const_cast<T_cv &>(*get<T>(fn_)),  \
+                                            std::forward<Args>(args)...);      \
               })                                                               \
         {                                                                      \
         }                                                                      \
