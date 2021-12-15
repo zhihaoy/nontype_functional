@@ -57,10 +57,6 @@ struct _qual_fn_sig_common<R(Args...) const noexcept>
 {
 };
 
-template<class T>
-inline constexpr bool _is_function_pointer =
-    std::is_pointer_v<T> and std::is_function_v<std::remove_pointer_t<T>>;
-
 template<class T, class Self>
 inline constexpr bool _is_not_self =
     not std::is_same_v<std::remove_cv_t<T>, Self>;
@@ -75,7 +71,7 @@ template<class Sig> struct _qual_fn_sig : _qual_fn_sig_common<Sig>
     template<class T>
     static constexpr bool is_lvalue_invocable_using =
         _qual_fn_sig_common<Sig>::template is_invocable_using<T &> and
-        not _is_function_pointer<T> and not std::is_member_pointer_v<T>;
+        not std::is_member_pointer_v<T>;
 };
 
 struct _function_ref_base
@@ -130,6 +126,17 @@ template<class Sig> class function_ref;
                                                                                \
       public:                                                                  \
         function_ref() = default;                                              \
+                                                                               \
+        template<class F>                                                      \
+        function_ref(F *f) noexcept requires std::is_function_v<F> and         \
+            signature::template is_invocable_using<F>                          \
+            : obj_(f), fptr_([](storage fn_, Args... args) {                   \
+                return std23::invoke_r<R>(get<F>(fn_),                         \
+                                          std::forward<Args>(args)...);        \
+            })                                                                 \
+        {                                                                      \
+        }                                                                      \
+                                                                               \
         template<class F, class T = std::remove_reference_t<F>>                \
         function_ref(F &&f) noexcept                                           \
             requires(_is_not_self<T, function_ref> and                         \
