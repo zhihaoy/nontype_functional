@@ -9,5 +9,6 @@ target_sources(run PRIVATE
  "test_noexcept.cpp"
  "test_const.cpp"
  "test_safety.cpp"
- "test_const_noexcept.cpp")
+ "test_const_noexcept.cpp"
+ "test_ctad.cpp")
 target_link_libraries(run PRIVATE function_ref_nontype)

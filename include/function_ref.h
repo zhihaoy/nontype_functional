@@ -214,4 +214,61 @@ _FUNCTION_REF_SPECIALIZATION(R(Args...) const noexcept, T const);
 
 #undef _FUNCTION_REF_SPECIALIZATION
 
+template<class T> struct _adapt_signature;
+
+template<class F>
+requires std::is_function_v<F>
+struct _adapt_signature<F *>
+{
+    using type = F;
+};
+
+template<class Fp> using _adapt_signature_t = _adapt_signature<Fp>::type;
+
+template<class T> struct _drop_first_arg_to_invoke;
+
+template<class R, class T, class... Args>
+struct _drop_first_arg_to_invoke<R (*)(T, Args...)>
+{
+    using type = R(Args...);
+};
+
+template<class R, class T, class... Args>
+struct _drop_first_arg_to_invoke<R (*)(T, Args...) noexcept>
+{
+    using type = R(Args...);
+};
+
+template<class T, class Cls>
+requires std::is_object_v<T>
+struct _drop_first_arg_to_invoke<T Cls::*>
+{
+    using type = T();
+};
+
+template<class T, class Cls>
+requires std::is_function_v<T>
+struct _drop_first_arg_to_invoke<T Cls::*>
+{
+    using type = T;
+};
+
+template<class Fp>
+using _drop_first_arg_to_invoke_t = _drop_first_arg_to_invoke<Fp>::type;
+
+// clang-format off
+
+template<class F>
+requires std::is_function_v<F>
+function_ref(F *) -> function_ref<F>;
+
+// clang-format on
+
+template<auto V>
+function_ref(nontype_t<V>) -> function_ref<_adapt_signature_t<decltype(V)>>;
+
+template<auto V>
+function_ref(nontype_t<V>, auto)
+    -> function_ref<_drop_first_arg_to_invoke_t<decltype(V)>>;
+
 } // namespace std23
