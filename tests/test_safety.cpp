@@ -3,6 +3,11 @@
 static_assert(std::is_invocable_v<decltype(foo), decltype(f)>);
 static_assert(std::is_invocable_v<decltype(foo), decltype(&f)>);
 
+auto get_h()
+{
+    return h;
+}
+
 void test_safety()
 {
     using T = function_ref<int(A)>;
@@ -30,4 +35,10 @@ void test_safety()
     static_assert(not std::is_assignable_v<U &, decltype(&A::g)>);
     static_assert(not std::is_assignable_v<U &, decltype(&A::k)>);
     static_assert(not std::is_assignable_v<U &, decltype(&A::data)>);
+
+    T fr = get_h();
+    A a;
+    fr(a);
+    fr = &h;
+    fr(a);
 }
