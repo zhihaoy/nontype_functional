@@ -8,5 +8,6 @@ target_sources(run PRIVATE
  "common_callables.cpp"
  "test_noexcept.cpp"
  "test_const.cpp"
- "test_safety.cpp")
+ "test_safety.cpp"
+ "test_const_noexcept.cpp")
 target_link_libraries(run PRIVATE function_ref_nontype)
