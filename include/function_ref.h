@@ -59,7 +59,21 @@ struct _qual_fn_sig_common<R(Args...) const noexcept>
 
 template<class T, class Self>
 inline constexpr bool _is_not_self =
-    not std::is_same_v<std::remove_cv_t<T>, Self>;
+    not std::is_same_v<std::remove_cvref_t<T>, Self>;
+
+template<class T> struct _unwrap_reference
+{
+    using type = T;
+};
+
+template<class U> struct _unwrap_reference<std::reference_wrapper<U>>
+{
+    using type = U;
+};
+
+template<class T>
+using _remove_and_unwrap_reference_t =
+    _unwrap_reference<std::remove_reference_t<T>>::type;
 
 template<class Sig> struct _qual_fn_sig : _qual_fn_sig_common<Sig>
 {
@@ -137,14 +151,15 @@ template<class Sig> class function_ref;
         {                                                                      \
         }                                                                      \
                                                                                \
-        template<class F, class T = std::remove_reference_t<F>>                \
+        template<class F, class T = _remove_and_unwrap_reference_t<F>>         \
         function_ref(F &&f) noexcept requires                                  \
-            _is_not_self<T, function_ref> and                                  \
+            _is_not_self<F, function_ref> and                                  \
             signature::template is_lvalue_invocable_using<T_cv>                \
-            : obj_(std::addressof(f)), fptr_([](storage fn_, Args... args) {   \
-                return std23::invoke_r<R>(const_cast<T_cv &>(*get<T>(fn_)),    \
-                                          std::forward<Args>(args)...);        \
-            })                                                                 \
+            : obj_(std::addressof(static_cast<T &>(f))),                       \
+              fptr_([](storage fn_, Args... args) {                            \
+                  return std23::invoke_r<R>(const_cast<T_cv &>(*get<T>(fn_)),  \
+                                            std::forward<Args>(args)...);      \
+              })                                                               \
         {                                                                      \
         }                                                                      \
                                                                                \

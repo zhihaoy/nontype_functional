@@ -50,4 +50,12 @@ void test_safety()
         A a;
         fr(a);
     }
+
+    {
+        T fr;
+        auto fn = [](A) { return BODY(); };
+        fr = std::ref(fn);
+        A a;
+        fr(a);
+    }
 }

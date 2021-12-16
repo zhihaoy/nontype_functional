@@ -23,7 +23,7 @@
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
       "wslPath": "Ubuntu-20.04",
-      "variables": []
+      "addressSanitizerEnabled": true
     }
   ]
 }
