@@ -52,6 +52,11 @@ void test_safety()
     }
 
     {
+        function_ref fr = f;
+        fr = std::ref(f);
+    }
+
+    {
         T fr;
         auto fn = [](A) { return BODY(); };
         fr = std::ref(fn);
