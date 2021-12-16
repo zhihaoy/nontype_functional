@@ -36,9 +36,18 @@ void test_safety()
     static_assert(not std::is_assignable_v<U &, decltype(&A::k)>);
     static_assert(not std::is_assignable_v<U &, decltype(&A::data)>);
 
-    T fr = get_h();
-    A a;
-    fr(a);
-    fr = &h;
-    fr(a);
+    {
+        T fr = get_h();
+        A a;
+        fr(a);
+        fr = &h;
+        fr(a);
+    }
+
+    {
+        T fr;
+        fr = nontype<[](A) { return BODY(); }>;
+        A a;
+        fr(a);
+    }
 }

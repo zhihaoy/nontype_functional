@@ -2,6 +2,7 @@
 
 #include "function_ref.h"
 
+#include <cassert>
 #include <cstdio>
 
 #ifdef _MSC_VER
