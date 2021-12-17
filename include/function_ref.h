@@ -84,8 +84,7 @@ template<class Sig> struct _qual_fn_sig : _qual_fn_sig_common<Sig>
 
     template<class T>
     static constexpr bool is_lvalue_invocable_using =
-        _qual_fn_sig_common<Sig>::template is_invocable_using<T &> and
-        not std::is_member_pointer_v<T>;
+        _qual_fn_sig_common<Sig>::template is_invocable_using<T &>;
 };
 
 struct _function_ref_base
