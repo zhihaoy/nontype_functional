@@ -207,17 +207,6 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     {
         return fptr_(obj_, std::forward<Args>(args)...);
     }
-
-    constexpr void swap(function_ref &other) noexcept
-    {
-        std::swap(this->obj_, other.obj_);
-        std::swap(this->fptr_, other.fptr_);
-    }
-
-    friend constexpr void swap(function_ref &lhs, function_ref &rhs) noexcept
-    {
-        lhs.swap(rhs);
-    }
 };
 
 template<class T> struct _adapt_signature;
