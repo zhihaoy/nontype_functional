@@ -9,6 +9,7 @@ auto get_h()
 }
 
 using T = function_ref<int(A)>;
+static_assert(not std::is_default_constructible_v<T>);
 
 void test_safety()
 {
@@ -21,8 +22,7 @@ void test_safety()
     }
 
     {
-        T fr;
-        fr = nontype<[](A) { return BODY(); }>;
+        T fr = nontype<[](A) { return BODY(); }>;
         A a;
         fr(a);
     }
@@ -33,9 +33,8 @@ void test_safety()
     }
 
     {
-        T fr;
         auto fn = [](A) { return BODY(); };
-        fr = std::ref(fn);
+        T fr = std::ref(fn);
         A a;
         fr(a);
     }

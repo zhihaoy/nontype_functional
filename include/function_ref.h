@@ -146,8 +146,6 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     static constexpr bool is_lvalue_invocable_using = is_invocable_using<T &>;
 
   public:
-    function_ref() = default;
-
     template<class F>
     function_ref(F *f) noexcept requires std::is_function_v<F> and
         is_invocable_using<F>

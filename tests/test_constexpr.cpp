@@ -15,9 +15,8 @@ struct B
 
 constexpr int constexpr_test1()
 {
-    function_ref<int()> fr;
-    fr = nontype<f>;  // f is not constexpr
-    fr = nontype<cf>; // cf is
+    function_ref<int()> fr = nontype<f>;
+    fr = nontype<cf>; // cf is a constexpr function
     return fr();
 }
 
