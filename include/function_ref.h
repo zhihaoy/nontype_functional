@@ -77,6 +77,22 @@ template<class U> struct _unwrap_reference<std::reference_wrapper<U>>
     using type = U;
 };
 
+template<class U> struct _unwrap_reference<std::reference_wrapper<U> const>
+{
+    using type = U;
+};
+
+template<class U> struct _unwrap_reference<std::reference_wrapper<U> volatile>
+{
+    using type = U;
+};
+
+template<class U>
+struct _unwrap_reference<std::reference_wrapper<U> const volatile>
+{
+    using type = U;
+};
+
 template<class T>
 using _remove_and_unwrap_reference_t =
     _unwrap_reference<std::remove_reference_t<T>>::type;

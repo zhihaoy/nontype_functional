@@ -30,6 +30,13 @@ void test_safety()
     {
         function_ref fr = f;
         fr = std::ref(f);
+        fr();
+    }
+
+    {
+        function_ref fr = f;
+        fr = const_cast<std::reference_wrapper<int()> const &&>(std::ref(f));
+        fr();
     }
 
     {
