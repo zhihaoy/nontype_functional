@@ -150,6 +150,8 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     using signature = _qual_fn_sig<Sig>;
     template<class T> using cv = signature::template cv<T>;
 
+    template<class T> using cvref = cv<T> &;
+
     template<class... T>
     static constexpr bool is_invocable_using =
         signature::template is_invocable_using<T...>;
@@ -157,9 +159,6 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     template<class F, class... T>
     static constexpr bool is_memfn_invocable_using =
         is_invocable_using<F, T...> and std::is_member_pointer_v<F>;
-
-    template<class T>
-    static constexpr bool is_lvalue_invocable_using = is_invocable_using<T &>;
 
   public:
     template<class F>
@@ -173,10 +172,10 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
 
     template<class F, class T = _remove_and_unwrap_reference_t<F>>
     function_ref(F &&f) noexcept requires _is_not_self<F, function_ref> and
-        is_lvalue_invocable_using<cv<T>>
+        is_invocable_using<cvref<T>>
         : obj_(std::addressof(static_cast<T &>(f))),
           fptr_([](storage fn_, Args... args) {
-              cv<T> &obj = *get<T>(fn_);
+              cvref<T> obj = *get<T>(fn_);
               return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
           })
     {
@@ -190,13 +189,16 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     {
     }
 
-    template<auto F, class T>
-    function_ref(nontype_t<F>, cv<T> &obj) noexcept requires
-        is_invocable_using<decltype(F), decltype(obj)>
-        : obj_(std::addressof(obj)), fptr_([](storage this_, Args... args) {
-            return std23::invoke_r<R>(F, *(get<cv<T>>(this_)),
-                                      std::forward<Args>(args)...);
-        })
+    template<auto F, class U, class Ty = std::unwrap_reference_t<U>,
+             class T = std::remove_reference_t<Ty>>
+    function_ref(nontype_t<F>,
+                 U &&obj) noexcept requires std::is_lvalue_reference_v<Ty> and
+        is_invocable_using<decltype(F), cvref<T>>
+        : obj_(std::addressof(static_cast<Ty>(obj))),
+          fptr_([](storage this_, Args... args) {
+              cvref<T> obj = *get<T>(this_);
+              return std23::invoke_r<R>(F, obj, std::forward<Args>(args)...);
+          })
     {
     }
 
@@ -207,13 +209,6 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
             return std23::invoke_r<R>(F, get<cv<T>>(this_),
                                       std::forward<Args>(args)...);
         })
-    {
-    }
-
-    template<auto F, class T>
-    function_ref(nontype_t<F> f, std::reference_wrapper<T> obj) noexcept
-        requires is_memfn_invocable_using<decltype(F), decltype(obj)>
-        : function_ref(f, obj.get())
     {
     }
 

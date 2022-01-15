@@ -54,19 +54,12 @@ void test_const()
 
     A a;
     meow({nontype<&A::k>, a});
-    meow({nontype<&A::k>, A{}});
     meow({nontype<&A::k>, &a});
     meow({nontype<&A::k>, std::ref(a)});
 
     static_assert(not std::is_constructible_v<T, nontype_t<h>, A>);
 
     meow({nontype<h>, a});
-    meow({nontype<h>, A{}});
-
-    static_assert(not std::is_constructible_v<T, nontype_t<h>,
-                                              std::reference_wrapper<A>>);
-    static_assert(not std::is_constructible_v<T, nontype_t<h>,
-                                              std::reference_wrapper<A const>>);
 
     meow({nontype<h>, std::ref(a)});  // h(std::ref(a))
     meow({nontype<h>, std::cref(a)}); // h(std::cref(a))
