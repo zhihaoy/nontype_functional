@@ -176,8 +176,8 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
         is_lvalue_invocable_using<cv<T>>
         : obj_(std::addressof(static_cast<T &>(f))),
           fptr_([](storage fn_, Args... args) {
-              return std23::invoke_r<R, cv<T> &>(*get<T>(fn_),
-                                                 std::forward<Args>(args)...);
+              cv<T> &obj = *get<T>(fn_);
+              return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
           })
     {
     }
