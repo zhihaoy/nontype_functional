@@ -2,7 +2,6 @@ name: CMake
 
 on:
   push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -11,24 +10,36 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ windows-2022, ubuntu-20.04 ]
 
     steps:
     - uses: actions/checkout@v2
     - uses: seanmiddleditch/gha-setup-ninja@master
 
     - name: Set up GCC
+      if: startsWith(matrix.os, 'ubuntu')
       uses: egor-tensin/setup-gcc@v1
       with:
         version: 11
+
+    - name: Set up Developer Command Prompt
+      if: startsWith(matrix.os, 'windows')
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Enable AddressSanitizer
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        echo "CXXFLAGS=-fsanitize=address" >> $GITHUB_ENV
+        echo "LDFLAGS=-fsanitize=address" >> $GITHUB_ENV
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
-      env:
-        CXXFLAGS: -fsanitize=address
-        LDFLAGS: -fsanitize=address
       run: ninja -C ${{github.workspace}}/build
 
     - name: Test
