@@ -144,7 +144,7 @@ template<class Sig, class R, class... Args>
 struct function_ref<Sig, R(Args...)> : _function_ref_base
 {
     storage obj_;
-    typedef R fwd_t(storage, Args...);
+    typedef R fwd_t(storage, Args &&...);
     fwd_t *fptr_ = nullptr;
 
     using signature = _qual_fn_sig<Sig>;
@@ -164,7 +164,7 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     template<class F>
     function_ref(F *f) noexcept requires std::is_function_v<F> and
         is_invocable_using<F>
-        : obj_(f), fptr_([](storage fn_, Args... args) {
+        : obj_(f), fptr_([](storage fn_, Args &&...args) {
             return std23::invoke_r<R>(get<F>(fn_), std::forward<Args>(args)...);
         })
     {
@@ -174,7 +174,7 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     function_ref(F &&f) noexcept requires _is_not_self<F, function_ref> and
         is_invocable_using<cvref<T>>
         : obj_(std::addressof(static_cast<T &>(f))),
-          fptr_([](storage fn_, Args... args) {
+          fptr_([](storage fn_, Args &&...args) {
               cvref<T> obj = *get<T>(fn_);
               return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
           })
@@ -183,7 +183,7 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
 
     template<auto F>
     constexpr function_ref(nontype_t<F>) noexcept requires
-        is_invocable_using<decltype(F)> : fptr_([](storage, Args... args) {
+        is_invocable_using<decltype(F)> : fptr_([](storage, Args &&...args) {
             return std23::invoke_r<R>(F, std::forward<Args>(args)...);
         })
     {
@@ -195,7 +195,7 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
                  U &&obj) noexcept requires std::is_lvalue_reference_v<Ty> and
         is_invocable_using<decltype(F), cvref<T>>
         : obj_(std::addressof(static_cast<Ty>(obj))),
-          fptr_([](storage this_, Args... args) {
+          fptr_([](storage this_, Args &&...args) {
               cvref<T> obj = *get<T>(this_);
               return std23::invoke_r<R>(F, obj, std::forward<Args>(args)...);
           })
@@ -205,7 +205,7 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     template<auto F, class T>
     function_ref(nontype_t<F>, cv<T> *obj) noexcept requires
         is_memfn_invocable_using<decltype(F), decltype(obj)>
-        : obj_(obj), fptr_([](storage this_, Args... args) {
+        : obj_(obj), fptr_([](storage this_, Args &&...args) {
             return std23::invoke_r<R>(F, get<cv<T>>(this_),
                                       std::forward<Args>(args)...);
         })
