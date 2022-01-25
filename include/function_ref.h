@@ -66,8 +66,7 @@ struct _qual_fn_sig<R(Args...) const noexcept>
 // See also: https://www.agner.org/optimize/calling_conventions.pdf
 template<class T>
 inline constexpr auto _select_param_type = [] {
-    if constexpr (std::is_trivially_copyable_v<T> and
-                  sizeof(T) <= sizeof(long double))
+    if constexpr (std::is_trivially_copyable_v<T>)
         return std::type_identity<T>();
     else
         return std::add_rvalue_reference<T>();
