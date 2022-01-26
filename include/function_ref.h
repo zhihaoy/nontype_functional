@@ -147,10 +147,10 @@ struct _function_ref_base
 };
 
 template<class Sig, class = typename _qual_fn_sig<Sig>::function>
-struct function_ref;
+class function_ref;
 
 template<class Sig, class R, class... Args>
-struct function_ref<Sig, R(Args...)> : _function_ref_base
+class function_ref<Sig, R(Args...)> : _function_ref_base
 {
     storage obj_;
     typedef R fwd_t(storage, _param_t<Args>...);
