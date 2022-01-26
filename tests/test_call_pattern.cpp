@@ -25,6 +25,13 @@ static void make_call(Track &&)
 {
 }
 
+struct make_value_call
+{
+    void apply(Track)
+    {
+    }
+};
+
 void test_call_pattern()
 {
     {
@@ -55,5 +62,22 @@ void test_call_pattern()
         Track t{n};
         fr(t);
         printf("std::function: lvalue copied %d time(s)\n", n);
+    }
+
+    {
+        int n = 0;
+        make_value_call a;
+        function_ref<void(Track)> fr = {nontype<&make_value_call::apply>, &a};
+        fr(Track{n});
+        printf("bound function_ref: rvalue copied %d time(s)\n", n);
+    }
+
+    {
+        int n = 0;
+        make_value_call a;
+        auto bound = std::bind_front(&make_value_call::apply, &a);
+        std::function<void(Track)> fr = bound;
+        fr(Track{n});
+        printf("bound std::function: rvalue copied %d time(s)\n", n);
     }
 }

@@ -75,6 +75,18 @@ inline constexpr auto _select_param_type = [] {
 template<class T>
 using _param_t = std::invoke_result_t<decltype(_select_param_type<T>)>::type;
 
+template<class Base, class Derived>
+constexpr auto _up_cast(Derived *p) -> Base *
+{
+    return p;
+}
+
+template<class Base, class Derived>
+constexpr auto _up_cast(Derived const *p) -> Base const *
+{
+    return p;
+}
+
 template<class T, class Self>
 inline constexpr bool _is_not_self =
     not std::is_same_v<std::remove_cvref_t<T>, Self>;
@@ -224,6 +236,25 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
         })
     {
     }
+
+#if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
+
+    // precondition: obj != nullptr
+    template<class C, class FT, FT C::*F, class T,
+             class Ufty = _qual_fn_sig<FT>::function>
+    function_ref(nontype_t<F>,
+                 cv<T> *obj) requires std::is_same_v<Ufty, R(Args...)> and
+        is_invocable_using<decltype(F), decltype(obj)>
+        : obj_(_up_cast<C>(obj)), fptr_((fwd_t *)(obj->*F))
+    {
+    }
+
+#pragma GCC diagnostic pop
+
+#endif
 
     constexpr R operator()(Args... args) const noexcept(signature::is_noexcept)
     {
