@@ -65,7 +65,8 @@ struct _qual_fn_sig<R(Args...) const noexcept>
 
 // See also: https://www.agner.org/optimize/calling_conventions.pdf
 template<class T>
-inline constexpr auto _select_param_type = [] {
+inline constexpr auto _select_param_type = []
+{
     if constexpr (std::is_trivially_copyable_v<T>)
         return std::type_identity<T>();
     else
@@ -111,7 +112,8 @@ using _remove_and_unwrap_reference_t =
 
 struct _function_ref_base
 {
-    union storage {
+    union storage
+    {
         void *p_ = nullptr;
         void const *cp_;
         void (*fp_)();
@@ -120,22 +122,17 @@ struct _function_ref_base
 
         template<class T>
         requires std::is_object_v<T>
-        constexpr explicit storage(T *p) noexcept : p_(p)
-        {
-        }
+        constexpr explicit storage(T *p) noexcept : p_(p) {}
 
         template<class T>
         requires std::is_object_v<T>
-        constexpr explicit storage(T const *p) noexcept : cp_(p)
-        {
-        }
+        constexpr explicit storage(T const *p) noexcept : cp_(p) {}
 
         template<class T>
         requires std::is_function_v<T>
         constexpr explicit storage(T *p) noexcept
             : fp_(reinterpret_cast<decltype(fp_)>(p))
-        {
-        }
+        {}
     };
 
     template<class T> constexpr static auto get(storage obj)
@@ -176,31 +173,32 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
     template<class F>
     function_ref(F *f) noexcept requires std::is_function_v<F> and
         is_invocable_using<F>
-        : obj_(f), fptr_([](storage fn_, _param_t<Args>... args) {
-            return std23::invoke_r<R>(get<F>(fn_), std::forward<Args>(args)...);
-        })
-    {
-    }
+        : obj_(f),
+          fptr_(
+              [](storage fn_, _param_t<Args>... args) {
+                  return std23::invoke_r<R>(get<F>(fn_),
+                                            std::forward<Args>(args)...);
+              })
+    {}
 
     template<class F, class T = _remove_and_unwrap_reference_t<F>>
     function_ref(F &&f) noexcept requires _is_not_self<F, function_ref> and
         is_invocable_using<cvref<T>>
         : obj_(std::addressof(static_cast<T &>(f))),
-          fptr_([](storage fn_, _param_t<Args>... args) {
-              cvref<T> obj = *get<T>(fn_);
-              return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
-          })
-    {
-    }
+          fptr_(
+              [](storage fn_, _param_t<Args>... args)
+              {
+                  cvref<T> obj = *get<T>(fn_);
+                  return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
+              })
+    {}
 
     template<auto F>
     constexpr function_ref(nontype_t<F>) noexcept requires
         is_invocable_using<decltype(F)>
-        : fptr_([](storage, _param_t<Args>... args) {
-            return std23::invoke_r<R>(F, std::forward<Args>(args)...);
-        })
-    {
-    }
+        : fptr_([](storage, _param_t<Args>... args)
+                { return std23::invoke_r<R>(F, std::forward<Args>(args)...); })
+    {}
 
     template<auto F, class U, class Ty = std::unwrap_reference_t<U>,
              class T = std::remove_reference_t<Ty>>
@@ -208,22 +206,26 @@ struct function_ref<Sig, R(Args...)> : _function_ref_base
                  U &&obj) noexcept requires std::is_lvalue_reference_v<Ty> and
         is_invocable_using<decltype(F), cvref<T>>
         : obj_(std::addressof(static_cast<Ty>(obj))),
-          fptr_([](storage this_, _param_t<Args>... args) {
-              cvref<T> obj = *get<T>(this_);
-              return std23::invoke_r<R>(F, obj, std::forward<Args>(args)...);
-          })
-    {
-    }
+          fptr_(
+              [](storage this_, _param_t<Args>... args)
+              {
+                  cvref<T> obj = *get<T>(this_);
+                  return std23::invoke_r<R>(F, obj,
+                                            std::forward<Args>(args)...);
+              })
+    {}
 
     template<auto F, class T>
     function_ref(nontype_t<F>, cv<T> *obj) noexcept requires
         is_memfn_invocable_using<decltype(F), decltype(obj)>
-        : obj_(obj), fptr_([](storage this_, _param_t<Args>... args) {
-            return std23::invoke_r<R>(F, get<cv<T>>(this_),
-                                      std::forward<Args>(args)...);
-        })
-    {
-    }
+        : obj_(obj),
+          fptr_(
+              [](storage this_, _param_t<Args>... args)
+              {
+                  return std23::invoke_r<R>(F, get<cv<T>>(this_),
+                                            std::forward<Args>(args)...);
+              })
+    {}
 
     constexpr R operator()(Args... args) const noexcept(signature::is_noexcept)
     {

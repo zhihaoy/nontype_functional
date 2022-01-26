@@ -7,10 +7,7 @@ void meow(function_ref<int() const> f)
 
 struct C_mut
 {
-    int operator()()
-    {
-        return BODY();
-    }
+    int operator()() { return BODY(); }
 };
 
 void test_const()

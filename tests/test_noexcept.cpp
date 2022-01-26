@@ -12,10 +12,7 @@ void bar(function_ref<int() noexcept> f)
 
 struct A_good
 {
-    int g() noexcept
-    {
-        return BODY();
-    }
+    int g() noexcept { return BODY(); }
 };
 
 int h_good(A) noexcept
