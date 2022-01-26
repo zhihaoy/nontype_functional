@@ -20,10 +20,7 @@ static void calling_convension_differs(function_ref<void(std::string)> fr)
 struct pure_if
 {
     virtual int f() noexcept = 0;
-    virtual int g()
-    {
-        return -1;
-    }
+    virtual int g() { return -1; }
 };
 
 void test_pmf_cast()
@@ -31,10 +28,7 @@ void test_pmf_cast()
     {
         struct TR
         {
-            char const *f()
-            {
-                return some_str;
-            }
+            char const *f() { return some_str; }
         } a;
         return_type_differs({nontype<&TR::f>, &a});
     }

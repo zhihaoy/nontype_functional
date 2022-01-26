@@ -2,15 +2,8 @@
 
 struct D
 {
-    int operator()() noexcept
-    {
-        return BODY();
-    }
-
-    int operator()() const noexcept
-    {
-        return BODY();
-    }
+    int operator()() noexcept { return BODY(); }
+    int operator()() const noexcept { return BODY(); }
 };
 
 void dad(function_ref<int() const noexcept> f)
@@ -20,15 +13,8 @@ void dad(function_ref<int() const noexcept> f)
 
 struct A_nice
 {
-    int g() noexcept
-    {
-        return BODY();
-    }
-
-    int h() const noexcept
-    {
-        return BODY();
-    }
+    int g() noexcept { return BODY(); }
+    int h() const noexcept { return BODY(); }
 };
 
 void test_const_noexcept()

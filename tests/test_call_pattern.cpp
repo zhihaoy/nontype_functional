@@ -8,28 +8,19 @@ struct Base
 class Track : Base
 {
   public:
-    Track(int &target) : Base{target}
-    {
-    }
-
-    Track(Track const &other) : Base(other)
-    {
-        ++n;
-    }
+    Track(int &target) : Base{target} {}
+    Track(Track const &other) : Base(other) { ++n; }
 };
 
 static_assert(not std::is_trivially_copy_constructible_v<Track>);
 static_assert(not std::is_trivially_move_constructible_v<Track>);
 
 static void make_call(Track &&)
-{
-}
+{}
 
 struct make_value_call
 {
-    void apply(Track)
-    {
-    }
+    void apply(Track) {}
 };
 
 void test_call_pattern()
