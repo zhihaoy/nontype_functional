@@ -12,6 +12,17 @@
       "ctestCommandArgs": ""
     },
     {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ]
+    },
+    {
       "name": "WSL-GCC-Debug",
       "generator": "Ninja",
       "configurationType": "Debug",
@@ -24,6 +35,21 @@
       "inheritEnvironments": [ "linux_x64" ],
       "wslPath": "Ubuntu-20.04",
       "addressSanitizerEnabled": true
+    },
+    {
+      "name": "WSL-GCC-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeExecutable": "cmake",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "linux_x64" ],
+      "wslPath": "Ubuntu-20.04",
+      "addressSanitizerEnabled": true,
+      "variables": []
     }
   ]
 }

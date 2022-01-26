@@ -250,7 +250,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     function_ref(nontype_t<F>,
                  cv<T> *obj) requires std::is_same_v<Ufty, R(Args...)> and
         is_invocable_using<decltype(F), decltype(obj)>
-        : fptr_((fwd_t *)(obj->*F)), obj_(_up_cast<C>(obj))
+        : fptr_((fwd_t *)(_up_cast<C>(obj)->*F)), obj_(_up_cast<C>(obj))
     {}
 
 #pragma GCC diagnostic pop
