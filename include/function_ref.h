@@ -164,9 +164,9 @@ class function_ref;
 template<class Sig, class R, class... Args>
 class function_ref<Sig, R(Args...)> : _function_ref_base
 {
-    storage obj_;
     typedef R fwd_t(storage, _param_t<Args>...);
     fwd_t *fptr_ = nullptr;
+    storage obj_;
 
     using signature = _qual_fn_sig<Sig>;
     template<class T> using cv = signature::template cv<T>;
@@ -185,24 +185,24 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     template<class F>
     function_ref(F *f) noexcept requires std::is_function_v<F> and
         is_invocable_using<F>
-        : obj_(f),
-          fptr_(
+        : fptr_(
               [](storage fn_, _param_t<Args>... args) {
                   return std23::invoke_r<R>(get<F>(fn_),
                                             std::forward<Args>(args)...);
-              })
+              }),
+          obj_(f)
     {}
 
     template<class F, class T = _remove_and_unwrap_reference_t<F>>
     function_ref(F &&f) noexcept requires _is_not_self<F, function_ref> and
         is_invocable_using<cvref<T>>
-        : obj_(std::addressof(static_cast<T &>(f))),
-          fptr_(
+        : fptr_(
               [](storage fn_, _param_t<Args>... args)
               {
                   cvref<T> obj = *get<T>(fn_);
                   return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
-              })
+              }),
+          obj_(std::addressof(static_cast<T &>(f)))
     {}
 
     template<auto F>
@@ -217,26 +217,26 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     function_ref(nontype_t<F>,
                  U &&obj) noexcept requires std::is_lvalue_reference_v<Ty> and
         is_invocable_using<decltype(F), cvref<T>>
-        : obj_(std::addressof(static_cast<Ty>(obj))),
-          fptr_(
+        : fptr_(
               [](storage this_, _param_t<Args>... args)
               {
                   cvref<T> obj = *get<T>(this_);
                   return std23::invoke_r<R>(F, obj,
                                             std::forward<Args>(args)...);
-              })
+              }),
+          obj_(std::addressof(static_cast<Ty>(obj)))
     {}
 
     template<auto F, class T>
     function_ref(nontype_t<F>, cv<T> *obj) noexcept requires
         is_memfn_invocable_using<decltype(F), decltype(obj)>
-        : obj_(obj),
-          fptr_(
+        : fptr_(
               [](storage this_, _param_t<Args>... args)
               {
                   return std23::invoke_r<R>(F, get<cv<T>>(this_),
                                             std::forward<Args>(args)...);
-              })
+              }),
+          obj_(obj)
     {}
 
 #if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
@@ -250,7 +250,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     function_ref(nontype_t<F>,
                  cv<T> *obj) requires std::is_same_v<Ufty, R(Args...)> and
         is_invocable_using<decltype(F), decltype(obj)>
-        : obj_(_up_cast<C>(obj)), fptr_((fwd_t *)(obj->*F))
+        : fptr_((fwd_t *)(obj->*F)), obj_(_up_cast<C>(obj))
     {}
 
 #pragma GCC diagnostic pop
