@@ -12,5 +12,8 @@ target_sources(run PRIVATE
  "test_const_noexcept.cpp"
  "test_ctad.cpp"
  "test_call_pattern.cpp"
- "test_pmf_cast.cpp")
+ "test_pmf_cast.cpp"
+ "test_pending_purecall.cpp"
+ "purecall_in_ctor.h"
+ "purecall_in_ctor.cpp")
 target_link_libraries(run PRIVATE function_ref_nontype)

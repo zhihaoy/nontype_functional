@@ -8,6 +8,7 @@ void test_safety();
 void test_const_noexcept();
 void test_call_pattern();
 void test_pmf_cast();
+void test_pending_purecall();
 
 int main()
 {
@@ -19,4 +20,5 @@ int main()
     test_const_noexcept();
     test_call_pattern();
     test_pmf_cast();
+    test_pending_purecall();
 }

@@ -249,7 +249,8 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
              class Ufty = _qual_fn_sig<FT>::function>
     function_ref(nontype_t<F>,
                  cv<T> *obj) requires std::is_same_v<Ufty, R(Args...)> and
-        is_invocable_using<decltype(F), decltype(obj)>
+        is_invocable_using<decltype(F), decltype(obj)> and
+        (not std::is_polymorphic_v<C>)
         : fptr_((fwd_t *)(_up_cast<C>(obj)->*F)), obj_(_up_cast<C>(obj))
     {}
 
