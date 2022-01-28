@@ -1,4 +1,5 @@
-add_library(kris-ut INTERFACE "include/boost/ut.hpp")
+add_library(kris-ut INTERFACE)
+target_sources(kris-ut INTERFACE "include/boost/ut.hpp")
 target_include_directories(kris-ut
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )

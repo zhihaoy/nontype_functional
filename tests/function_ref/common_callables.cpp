@@ -7,40 +7,30 @@ void foo(function_ref<int()> f)
 
 int f()
 {
-    return BODY();
+    return BODYN(free_function);
 }
 
 int A::g()
 {
-    return BODY();
+    return BODYN('g');
 }
 
 int A::k() const
 {
-    return BODY();
+    return BODYN('k');
 }
 
 int h(A)
 {
-    return BODY();
+    return BODYN(free_function);
 }
 
 int C::operator()()
 {
-    return BODY();
+    return BODYN(non_const);
 }
 
 int C::operator()() const
 {
-    return BODY();
-}
-
-void X::f()
-{
-    BODY();
-}
-
-void X::g()
-{
-    BODY();
+    return BODYN(const_);
 }

@@ -2,18 +2,29 @@
 
 #include "function_ref.h"
 
-#include <cassert>
+#include <boost/ut.hpp>
 #include <cstdio>
 
 #ifdef _MSC_VER
-#define BODY() std::puts(__FUNCSIG__)
+#define BODYN(n) ((::boost::ut::log << __FUNCSIG__), n)
 #else
-#define BODY() std::puts(__PRETTY_FUNCTION__)
+#define BODYN(n) ((::boost::ut::log << __PRETTY_FUNCTION__), n)
 #endif
+#define BODY() BODYN(0)
 
 using std23::function_ref;
 using std23::nontype;
 using std23::nontype_t;
+
+using namespace boost::ut;
+
+enum overloads
+{
+    free_function,
+    function_template,
+    non_const,
+    const_,
+};
 
 void foo(function_ref<int()> f);
 
@@ -21,7 +32,7 @@ int f();
 
 template<class T> T g()
 {
-    return BODY();
+    return BODYN(function_template);
 }
 
 struct A
@@ -38,10 +49,4 @@ struct C
 {
     int operator()();
     int operator()() const;
-};
-
-struct X
-{
-    void f();
-    void g();
 };
