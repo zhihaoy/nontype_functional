@@ -44,4 +44,4 @@ jobs:
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: tests/run
+      run: ctest
