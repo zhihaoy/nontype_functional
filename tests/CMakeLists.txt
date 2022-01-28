@@ -12,4 +12,4 @@ target_sources(run PRIVATE
  "test_const_noexcept.cpp"
  "test_ctad.cpp"
  "test_call_pattern.cpp")
-target_link_libraries(run PRIVATE function_ref_nontype)
+target_link_libraries(run PRIVATE nontype_functional)
