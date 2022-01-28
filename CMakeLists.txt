@@ -2,6 +2,8 @@
 project(nontype_functional NONE)
 enable_language(CXX)
 
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -21,4 +23,6 @@ target_include_directories(nontype_functional
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-add_subdirectory("tests")
+if(BUILD_TESTING)
+    add_subdirectory("tests")
+endif()
