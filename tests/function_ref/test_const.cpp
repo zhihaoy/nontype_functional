@@ -1,69 +1,113 @@
 #include "common_callables.h"
 
-void meow(function_ref<int() const> f)
-{
-    f();
-}
+constexpr auto call = [](function_ref<int() const> f) { return f(); };
 
 struct C_mut
 {
-    int operator()() { return BODY(); }
+    int operator()() { return BODYN(non_const); }
 };
 
-void test_const()
+suite const_qualified = []
 {
-    static_assert(
-        not std::is_invocable_v<decltype(meow),
-                                decltype([i = 0]() mutable { return i; })>);
+    using namespace bdd;
 
-    meow([] { return BODY(); });
+    "const_call_op"_test = []
+    {
+        given("a closure") = [] { expect(call([] { return BODYN(1); }) == 1); };
 
-    static_assert(std::is_invocable_v<decltype(foo), C_mut>);
-    static_assert(std::is_invocable_v<decltype(foo), C_mut &>);
-    static_assert(std::is_invocable_v<decltype(foo), C_mut &&>);
-    static_assert(not std::is_invocable_v<decltype(foo), C_mut const &>);
-    static_assert(not std::is_invocable_v<decltype(foo), C_mut const &&>);
+        given("a mutable callable object") = []
+        {
+            C c;
+            expect(call(c) == const_);
+        };
 
-    static_assert(not std::is_invocable_v<decltype(meow), C_mut>);
-    static_assert(not std::is_invocable_v<decltype(meow), C_mut &>);
-    static_assert(not std::is_invocable_v<decltype(meow), C_mut &&>);
-    static_assert(not std::is_invocable_v<decltype(meow), C_mut const &>);
-    static_assert(not std::is_invocable_v<decltype(meow), C_mut const &&>);
+        given("an immutable callable object") = []
+        {
+            C const c;
+            expect(call(c) == const_);
+        };
 
-    C c;
-    C const cc;
-    meow(c);
-    meow(cc);
-    meow(C{});
-    meow(static_cast<C const &&>(cc));
+        given("a prvalue") = [] { expect(call(C{}) == const_); };
+        given("a const xvalue") = []
+        {
+            C const cc;
+            expect(call(static_cast<C const &&>(cc)) == const_);
+        };
+    };
 
-    using T = function_ref<int()>;
-    using U = function_ref<int() const>;
+    "const_mem_fn"_test = []
+    {
+        given("an object without operator()") = []
+        {
+            A a;
 
-    static_assert(std::is_constructible_v<T, nontype_t<&A::g>, A &>);
-    static_assert(not std::is_constructible_v<T, nontype_t<&A::g>, A>);
+            when("binding by name") = [&] {
+                expect(call({nontype<&A::k>, a}) == 'k');
+            };
 
-    static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A &>);
-    static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A>);
+            when("binding by pointer") = [&] {
+                expect(call({nontype<&A::k>, &a}) == 'k');
+            };
 
-    static_assert(std::is_constructible_v<T, nontype_t<&A::k>, A &>);
-    static_assert(not std::is_constructible_v<T, nontype_t<&A::k>, A>);
+            when("binding by reference_wrapper") = [&] {
+                expect(call({nontype<&A::k>, std::ref(a)}) == 'k');
+            };
 
-    A a;
-    meow({nontype<&A::k>, a});
-    meow({nontype<&A::k>, &a});
-    meow({nontype<&A::k>, std::ref(a)});
+            when("binding free function by name") = [&] {
+                expect(call({nontype<h>, a}) == free_function);
+            };
 
-    static_assert(not std::is_constructible_v<T, nontype_t<h>, A>);
+            when("binding free function by reference_wrapper") = [&]
+            {
+                then("equivalent to h(std::ref(a))") = [&] {
+                    expect(call({nontype<h>, std::ref(a)}) == free_function);
+                };
+                then("equivalent to h(std::cref(a))") = [&] {
+                    expect(call({nontype<h>, std::cref(a)}) == free_function);
+                };
+            };
+        };
+    };
+};
 
-    meow({nontype<h>, a});
+static_assert(not std::is_invocable_v<decltype(call), decltype([i = 0]() mutable
+                                                               { return i; })>,
+              "const-qualified signature cannot reference mutable lambda");
 
-    meow({nontype<h>, std::ref(a)});  // h(std::ref(a))
-    meow({nontype<h>, std::cref(a)}); // h(std::cref(a))
+static_assert(std::is_invocable_v<decltype(foo), C_mut>);
+static_assert(std::is_invocable_v<decltype(foo), C_mut &>);
+static_assert(std::is_invocable_v<decltype(foo), C_mut &&>);
+static_assert(not std::is_invocable_v<decltype(foo), C_mut const &>,
+              "const object is not callable");
+static_assert(not std::is_invocable_v<decltype(foo), C_mut const &&>);
 
-    static_assert(not std::is_constructible_v<T, nontype_t<h>, A *>);
-    static_assert(not std::is_constructible_v<T, nontype_t<h>, A const *>);
+static_assert(not std::is_invocable_v<decltype(call), C_mut>,
+              "const-qualified rvalue is not callable");
+static_assert(not std::is_invocable_v<decltype(call), C_mut &>,
+              "const-qualified lvalue is not callable");
+static_assert(not std::is_invocable_v<decltype(call), C_mut &&>);
+static_assert(not std::is_invocable_v<decltype(call), C_mut const &>);
+static_assert(not std::is_invocable_v<decltype(call), C_mut const &&>);
 
-    static_assert(not std::is_constructible_v<U, nontype_t<h>, A *>);
-    static_assert(not std::is_constructible_v<U, nontype_t<h>, A const *>);
-}
+using T = function_ref<int()>;
+using U = function_ref<int() const>;
+
+static_assert(std::is_constructible_v<T, nontype_t<&A::g>, A &>);
+static_assert(not std::is_constructible_v<T, nontype_t<&A::g>, A>,
+              "cannot bind rvalue");
+
+static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A &>);
+static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A>);
+
+static_assert(std::is_constructible_v<T, nontype_t<&A::k>, A &>);
+static_assert(not std::is_constructible_v<T, nontype_t<&A::k>, A>);
+
+static_assert(not std::is_constructible_v<T, nontype_t<h>, A>,
+              "free function does not bind rvalue either");
+
+static_assert(not std::is_constructible_v<T, nontype_t<h>, A *>,
+              "free function does not bind pointers");
+static_assert(not std::is_constructible_v<T, nontype_t<h>, A const *>);
+
+static_assert(not std::is_constructible_v<U, nontype_t<h>, A *>);
+static_assert(not std::is_constructible_v<U, nontype_t<h>, A const *>);
