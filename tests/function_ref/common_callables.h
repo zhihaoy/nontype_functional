@@ -18,13 +18,21 @@ using std23::nontype_t;
 
 using namespace boost::ut;
 
-enum overloads
+template<auto N> struct int_c : detail::op
 {
-    free_function,
-    function_template,
-    non_const,
-    const_,
+    using value_type = decltype(N);
+    static constexpr auto value = N;
+
+    [[nodiscard]] constexpr operator value_type() const { return N; }
+    [[nodiscard]] constexpr auto get() const { return N; }
 };
+
+inline constexpr int_c<0> free_function;
+inline constexpr int_c<1> function_template;
+inline constexpr int_c<2> non_const;
+inline constexpr int_c<3> const_;
+
+template<char V> inline constexpr int_c<V> ch;
 
 void foo(function_ref<int()> f);
 

@@ -9,7 +9,10 @@ suite basics = []
     "basics"_test = []
     {
         given("a function") = [] { expect(call(f) == free_function); };
-        given("a closure") = [] { expect(call([] { return BODYN(1); }) == 1); };
+
+        given("a closure") = []
+        { expect(call([] { return BODYN(1); }) == 1_i); };
+
         given("a function template specialization") = []
         { expect(call(g<int>) == function_template); };
 

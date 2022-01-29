@@ -11,9 +11,10 @@ suite const_qualified = []
 {
     using namespace bdd;
 
-    "const_call_op"_test = []
+    feature("callable as const") = []
     {
-        given("a closure") = [] { expect(call([] { return BODYN(1); }) == 1); };
+        given("a closure") = []
+        { expect(call([] { return BODYN(1); }) == 1_i); };
 
         given("a mutable callable object") = []
         {
@@ -35,22 +36,22 @@ suite const_qualified = []
         };
     };
 
-    "const_mem_fn"_test = []
+    feature("call from const member function") = []
     {
         given("an object without operator()") = []
         {
             A a;
 
             when("binding by name") = [&] {
-                expect(call({nontype<&A::k>, a}) == 'k');
+                expect(call({nontype<&A::k>, a}) == ch<'k'>);
             };
 
             when("binding by pointer") = [&] {
-                expect(call({nontype<&A::k>, &a}) == 'k');
+                expect(call({nontype<&A::k>, &a}) == ch<'k'>);
             };
 
             when("binding by reference_wrapper") = [&] {
-                expect(call({nontype<&A::k>, std::ref(a)}) == 'k');
+                expect(call({nontype<&A::k>, std::ref(a)}) == ch<'k'>);
             };
 
             when("binding free function by name") = [&] {
