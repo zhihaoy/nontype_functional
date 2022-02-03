@@ -181,7 +181,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
           obj_(f)
     {}
 
-    template<class F, class T = _remove_and_unwrap_reference_t<F>>
+    template<class F, class T = std::remove_reference_t<F>>
     function_ref(F &&f) noexcept requires _is_not_self<F, function_ref> and
         is_invocable_using<cvref<T>>
         : fptr_(
@@ -200,10 +200,9 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
                 { return std23::invoke_r<R>(F, std::forward<Args>(args)...); })
     {}
 
-    template<auto F, class U, class Ty = std::unwrap_reference_t<U>,
-             class T = std::remove_reference_t<Ty>>
+    template<auto F, class U, class T = std::remove_reference_t<U>>
     function_ref(nontype_t<F>,
-                 U &&obj) noexcept requires std::is_lvalue_reference_v<Ty> and
+                 U &&obj) noexcept requires std::is_lvalue_reference_v<U> and
         is_invocable_using<decltype(F), cvref<T>>
         : fptr_(
               [](storage this_, _param_t<Args>... args)
@@ -212,7 +211,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
                   return std23::invoke_r<R>(F, obj,
                                             std::forward<Args>(args)...);
               }),
-          obj_(std::addressof(static_cast<Ty>(obj)))
+          obj_(std::addressof(static_cast<U>(obj)))
     {}
 
     template<auto F, class T>

@@ -50,22 +50,14 @@ suite const_qualified = []
                 expect(call({nontype<&A::k>, &a}) == ch<'k'>);
             };
 
-            when("binding by reference_wrapper") = [&] {
-                expect(call({nontype<&A::k>, std::ref(a)}) == ch<'k'>);
+            when("binding by reference_wrapper") = [&]
+            {
+                std::reference_wrapper r = a;
+                expect(call({nontype<&A::k>, r}) == ch<'k'>);
             };
 
             when("binding free function by name") = [&] {
                 expect(call({nontype<h>, a}) == free_function);
-            };
-
-            when("binding free function by reference_wrapper") = [&]
-            {
-                then("equivalent to h(std::ref(a))") = [&] {
-                    expect(call({nontype<h>, std::ref(a)}) == free_function);
-                };
-                then("equivalent to h(std::cref(a))") = [&] {
-                    expect(call({nontype<h>, std::cref(a)}) == free_function);
-                };
             };
         };
     };

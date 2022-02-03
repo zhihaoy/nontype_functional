@@ -13,9 +13,8 @@ void test_nontype()
     foo({nontype<&A::k>, b});
     foo({nontype<&A::k>, &b});
     foo({nontype<&A::data>, a});
-    foo({nontype<&A::data>, std::ref(a)});
-    foo({nontype<&A::data>, std::cref(a)});
+    std::reference_wrapper r = a;
+    foo({nontype<&A::data>, r});
     foo({nontype<h>, a});
-    foo({nontype<h>, std::ref(a)});
-    foo({nontype<h>, std::cref(a)});
+    foo({nontype<h>, r});
 }

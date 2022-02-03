@@ -37,8 +37,8 @@ void test_const_noexcept()
     A a;
     dad({nontype<&A::data>, a});
     dad({nontype<&A::data>, &a});
-    dad({nontype<&A::data>, std::ref(a)});
-    dad({nontype<&A::data>, std::cref(a)});
+    std::reference_wrapper r = a;
+    dad({nontype<&A::data>, r});
 
     using U = function_ref<int() const noexcept>;
 

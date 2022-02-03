@@ -51,8 +51,10 @@ suite noexcept_qualified = []
                 expect(call({nontype<&A_good::g>, &x}) == ch<'g'>);
             };
 
-            when("binding by reference_wrapper") = [&] {
-                expect(call({nontype<&A_good::g>, std::ref(x)}) == ch<'g'>);
+            when("binding by reference_wrapper") = [&]
+            {
+                std::reference_wrapper r = x;
+                expect(call({nontype<&A_good::g>, r}) == ch<'g'>);
             };
         };
 
