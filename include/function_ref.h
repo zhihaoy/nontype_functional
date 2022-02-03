@@ -80,36 +80,6 @@ template<class T, class Self>
 inline constexpr bool _is_not_self =
     not std::is_same_v<std::remove_cvref_t<T>, Self>;
 
-template<class T> struct _unwrap_reference
-{
-    using type = T;
-};
-
-template<class U> struct _unwrap_reference<std::reference_wrapper<U>>
-{
-    using type = U;
-};
-
-template<class U> struct _unwrap_reference<std::reference_wrapper<U> const>
-{
-    using type = U;
-};
-
-template<class U> struct _unwrap_reference<std::reference_wrapper<U> volatile>
-{
-    using type = U;
-};
-
-template<class U>
-struct _unwrap_reference<std::reference_wrapper<U> const volatile>
-{
-    using type = U;
-};
-
-template<class T>
-using _remove_and_unwrap_reference_t =
-    _unwrap_reference<std::remove_reference_t<T>>::type;
-
 struct _function_ref_base
 {
     union storage
