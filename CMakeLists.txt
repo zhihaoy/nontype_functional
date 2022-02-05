@@ -18,7 +18,10 @@ else()
 endif()
 
 add_library(nontype_functional INTERFACE)
-target_sources(nontype_functional INTERFACE "include/function_ref.h")
+target_sources(nontype_functional INTERFACE
+ "include/function_ref.h"
+ "include/__functional_base.h"
+)
 target_include_directories(nontype_functional
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
