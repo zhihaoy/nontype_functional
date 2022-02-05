@@ -19,53 +19,60 @@ suite const_noexcept_qualified = []
 {
     using namespace bdd;
 
-    given("a const object and a non-const object") = []
+    feature("callable is const noexcept") = []
     {
-        D d;
-        D const cd;
-
-        when("unqualified signature call non-const object") = [&]
-        { expect(unqual_call(d) == 11_i); };
-
-        when("qualified signature call non-const object") = [&]
-        { expect(call(d) == 22_i); };
-
-        when("unqualified signature call const object") = [&]
-        { expect(unqual_call(cd) == 22_i); };
-
-        when("qualified signature call const object") = [&]
-        { expect(call(cd) == 22_i); };
-    };
-
-    given("a noexcept closure") = []
-    { expect(call([]() noexcept { return BODYN(42); }) == 42_i); };
-
-    given("a non-const object with no qualified member function") = []
-    {
-        A a;
-
-        then("pointer to data member is deemed a pure accessor") = [&]
+        given("a const object and a non-const object") = []
         {
-            expect(call({nontype<&A::data>, a}) == 99_i);
-            expect(call({nontype<&A::data>, &a}) == 99_i);
+            D d;
+            D const cd;
 
-            std::reference_wrapper r = a;
-            expect(call({nontype<&A::data>, r}) == 99_i);
-        };
-    };
+            when("unqualified signature call non-const object") = [&]
+            { expect(unqual_call(d) == 11_i); };
 
-    given("a non-const object with qualified member functions") = []
-    {
-        A_nice w;
+            when("qualified signature call non-const object") = [&]
+            { expect(call(d) == 22_i); };
 
-        then("can call const member function") = [&]
-        {
-            expect(call({nontype<&A_nice::h>, w}) == ch<'h'>);
-            expect(call({nontype<&A_nice::h>, &w}) == ch<'h'>);
+            when("unqualified signature call const object") = [&]
+            { expect(unqual_call(cd) == 22_i); };
+
+            when("qualified signature call const object") = [&]
+            { expect(call(cd) == 22_i); };
         };
 
-        then("can call const member function on const lvalue") = [&] {
-            expect(call({nontype<&A_nice::h>, std::as_const(w)}) == ch<'h'>);
+        given("a noexcept closure") = []
+        { expect(call([]() noexcept { return BODYN(42); }) == 42_i); };
+    };
+
+    feature("call from const noexcept member function") = []
+    {
+        given("a non-const object with no qualified member function") = []
+        {
+            A a;
+
+            then("pointer to data member is deemed a pure accessor") = [&]
+            {
+                expect(call({nontype<&A::data>, a}) == 99_i);
+                expect(call({nontype<&A::data>, &a}) == 99_i);
+
+                std::reference_wrapper r = a;
+                expect(call({nontype<&A::data>, r}) == 99_i);
+            };
+        };
+
+        given("a non-const object with qualified member functions") = []
+        {
+            A_nice w;
+
+            then("can call const member function") = [&]
+            {
+                expect(call({nontype<&A_nice::h>, w}) == ch<'h'>);
+                expect(call({nontype<&A_nice::h>, &w}) == ch<'h'>);
+            };
+
+            then("can call const member function on const lvalue") = [&] {
+                expect(call({nontype<&A_nice::h>, std::as_const(w)}) ==
+                       ch<'h'>);
+            };
         };
     };
 };
