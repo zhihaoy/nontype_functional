@@ -25,10 +25,9 @@ suite call_pattern = []
     "call_pattern"_test = []
     {
         given("a signature that takes parameter by value") =
-            []<class Ty>(Ty)
+            []<template<class> class C, class T>(C<T> ty)
         {
-            using T = Ty::type;
-            boost::ut::log << type<T>;
+            boost::ut::log << ty;
 
             T fr = make_call;
             int n = 0;
@@ -47,7 +46,7 @@ suite call_pattern = []
 
                 then("made at most one copy") = [&] { expect(n <= 1_i); };
             };
-        } | std::tuple<std::type_identity<function_ref<void(Track)>>,
-                       std::type_identity<std::function<void(Track)>>>{};
+        } | std::tuple(type<function_ref<void(Track)>>,
+                       type<std::function<void(Track)>>);
     };
 };
