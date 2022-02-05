@@ -18,35 +18,36 @@ static_assert(not std::is_trivially_move_constructible_v<Track>);
 static void make_call(Track &&)
 {}
 
-void test_call_pattern()
+suite call_pattern = []
 {
-    {
-        int n = 0;
-        function_ref<void(Track)> fr = make_call;
-        fr(Track{n});
-        printf("function_ref: rvalue copied %d time(s)\n", n);
-    }
+    using namespace bdd;
 
+    "call_pattern"_test = []
     {
-        int n = 0;
-        function_ref<void(Track)> fr = make_call;
-        Track t{n};
-        fr(t);
-        printf("function_ref: lvalue copied %d time(s)\n", n);
-    }
+        given("a signature that takes parameter by value") =
+            []<class Ty>(Ty)
+        {
+            using T = Ty::type;
+            boost::ut::log << type<T>;
 
-    {
-        int n = 0;
-        std::function<void(Track)> fr = make_call;
-        fr(Track{n});
-        printf("std::function: rvalue copied %d time(s)\n", n);
-    }
+            T fr = make_call;
+            int n = 0;
 
-    {
-        int n = 0;
-        std::function<void(Track)> fr = make_call;
-        Track t{n};
-        fr(t);
-        printf("std::function: lvalue copied %d time(s)\n", n);
-    }
-}
+            when("passing rvalue argument") = [=]() mutable
+            {
+                fr(Track{n});
+
+                then("no copy is made") = [&] { expect(n == 0_i); };
+            };
+
+            when("passing lvalue argument") = [=]() mutable
+            {
+                Track t{n};
+                fr(t);
+
+                then("made at most one copy") = [&] { expect(n <= 1_i); };
+            };
+        } | std::tuple<std::type_identity<function_ref<void(Track)>>,
+                       std::type_identity<std::function<void(Track)>>>{};
+    };
+};
