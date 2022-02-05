@@ -1,20 +1,58 @@
 #include "common_callables.h"
 
-void test_nontype()
+constexpr auto call = [](function_ref<int()> f) { return f(); };
+
+suite nttp_callable = []
 {
-    A a;
-    A const b;
-    foo(nontype<f>);
-    foo(nontype<g<int>>);
-    foo({nontype<&A::g>, a});
-    foo({nontype<&A::g>, &a});
-    foo({nontype<&A::k>, a});
-    foo({nontype<&A::k>, &a});
-    foo({nontype<&A::k>, b});
-    foo({nontype<&A::k>, &b});
-    foo({nontype<&A::data>, a});
-    std::reference_wrapper r = a;
-    foo({nontype<&A::data>, r});
-    foo({nontype<h>, a});
-    foo({nontype<h>, r});
-}
+    using namespace bdd;
+
+    feature("unbound instance method") = []
+    {
+        given("a function") = [] { expect(call(nontype<f>) == free_function); };
+
+        given("a function template specialization") = []
+        { expect(call(nontype<g<int>>) == function_template); };
+    };
+
+    feature("bound instance method") = []
+    {
+        given("a const object and a non-const object") = []
+        {
+            A a;
+            A const b;
+
+            when("binding non-const method to non-const object") = [&]
+            {
+                expect(call({nontype<&A::g>, a}) == ch<'g'>);
+                expect(call({nontype<&A::g>, &a}) == ch<'g'>);
+            };
+
+            when("binding const method to non-const object") = [&]
+            {
+                expect(call({nontype<&A::k>, a}) == ch<'k'>);
+                expect(call({nontype<&A::k>, &a}) == ch<'k'>);
+            };
+
+            when("binding const method to const object") = [&]
+            {
+                expect(call({nontype<&A::k>, b}) == ch<'k'>);
+                expect(call({nontype<&A::k>, &b}) == ch<'k'>);
+            };
+
+            when("binding pointer to data member to object") = [&] {
+                expect(call({nontype<&A::data>, a}) == 99_i);
+            };
+
+            when("binding free function to object") = [&] {
+                expect(call({nontype<h>, a}) == free_function);
+            };
+
+            when("passing objects using reference_wrapper") = [&]
+            {
+                std::reference_wrapper r = b;
+                expect(call({nontype<&A::data>, r}) == 99_i);
+                expect(call({nontype<h>, r}) == free_function);
+            };
+        };
+    };
+};
