@@ -3,7 +3,6 @@
 #include "function_ref.h"
 
 #include <boost/ut.hpp>
-#include <cstdio>
 
 #ifdef _MSC_VER
 #define BODYN(n) ((::boost::ut::log << __FUNCSIG__ << '\n'), n)
