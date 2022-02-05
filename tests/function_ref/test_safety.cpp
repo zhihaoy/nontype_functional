@@ -8,26 +8,35 @@ auto get_h()
     return h;
 }
 
-using T = function_ref<int(A)>;
-static_assert(not std::is_default_constructible_v<T>);
-
-void test_safety()
+int h_another(A const &)
 {
-    {
-        function_ref fr = get_h();
-        A a;
-        fr(a);
-        fr = &h;
-        fr(a);
-    }
-
-    {
-        T fr = nontype<[](A) { return BODY(); }>;
-        A a;
-        fr(a);
-    }
-
-    {
-        [](T f) { return f(A{}); }(&A::data);
-    }
+    return 'h';
 }
+
+suite safety = []
+{
+    using namespace bdd;
+
+    using T = function_ref<int(A)>;
+    static_assert(not std::is_default_constructible_v<T>);
+
+    "safety"_test = []
+    {
+        given("a function_ref initialized from a function pointer") = []
+        {
+            function_ref fr = get_h();
+            A a;
+
+            then("it is not dangling") = [&]
+            { expect(fr(a) == free_function); };
+
+            when("it rebinds to a different function pointer") = [&]
+            {
+                fr = &h_another;
+
+                then("it does not dangle either") = [&]
+                { expect(fr(a) == ch<'h'>); };
+            };
+        };
+    };
+};
