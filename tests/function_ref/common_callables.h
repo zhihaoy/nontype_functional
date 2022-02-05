@@ -6,11 +6,10 @@
 #include <cstdio>
 
 #ifdef _MSC_VER
-#define BODYN(n) ((::boost::ut::log << __FUNCSIG__), n)
+#define BODYN(n) ((::boost::ut::log << __FUNCSIG__ << '\n'), n)
 #else
-#define BODYN(n) ((::boost::ut::log << __PRETTY_FUNCTION__), n)
+#define BODYN(n) ((::boost::ut::log << __PRETTY_FUNCTION__ << '\n'), n)
 #endif
-#define BODY() BODYN(0)
 
 using std23::function_ref;
 using std23::nontype;
