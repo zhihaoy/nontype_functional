@@ -63,7 +63,7 @@ struct _drop_first_arg_to_invoke<R (*)(T, Args...)>
 template<class R, class T, class... Args>
 struct _drop_first_arg_to_invoke<R (*)(T, Args...) noexcept>
 {
-    using type = R(Args...);
+    using type = R(Args...) noexcept;
 };
 
 template<class T, class Cls>

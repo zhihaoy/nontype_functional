@@ -72,4 +72,11 @@ void test_ctad()
         auto fr = function_ref(nontype<&h>, a);
         static_assert(std::is_same_v<decltype(fr), function_ref<int()>>);
     }
+
+    {
+        A a;
+        auto fr = function_ref(nontype<&h_good>, a);
+        static_assert(
+            std::is_same_v<decltype(fr), function_ref<int() noexcept>>);
+    }
 }
