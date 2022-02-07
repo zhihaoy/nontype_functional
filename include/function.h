@@ -174,6 +174,8 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         other.target()->move_into(&storage_);
     }
 
+    ~function() { target()->~lvalue_callable(); }
+
     explicit operator bool() const noexcept
     {
         return dynamic_cast<empty_target_object const *>(target()) == nullptr;
