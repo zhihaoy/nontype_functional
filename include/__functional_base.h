@@ -52,6 +52,65 @@ struct _adapt_signature<F *>
 
 template<class Fp> using _adapt_signature_t = _adapt_signature<Fp>::type;
 
+template<class S> struct _not_qualifying_this;
+
+template<class R, class... Args> struct _not_qualifying_this<R(Args...)>
+{
+    using type = R(Args...);
+};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const> : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) volatile>
+    : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const volatile>
+    : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) &> : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const &>
+    : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) volatile &>
+    : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const volatile &>
+    : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) &&> : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const &&>
+    : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) volatile &&>
+    : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const volatile &&>
+    : _not_qualifying_this<R(Args...)>
+{};
+
 template<class T> struct _drop_first_arg_to_invoke;
 
 template<class R, class T, class... Args>
@@ -75,10 +134,8 @@ struct _drop_first_arg_to_invoke<T Cls::*>
 
 template<class T, class Cls>
 requires std::is_function_v<T>
-struct _drop_first_arg_to_invoke<T Cls::*>
-{
-    using type = T;
-};
+struct _drop_first_arg_to_invoke<T Cls::*> : _not_qualifying_this<T>
+{};
 
 template<class Fp>
 using _drop_first_arg_to_invoke_t = _drop_first_arg_to_invoke<Fp>::type;

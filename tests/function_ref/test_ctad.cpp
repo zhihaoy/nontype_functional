@@ -58,7 +58,8 @@ void test_ctad()
     {
         A a;
         auto fr = function_ref(nontype<&A::k>, &a);
-        static_assert(std::is_same_v<decltype(fr), function_ref<int() const>>);
+        static_assert(std::is_same_v<decltype(fr), function_ref<int()>>,
+                      "bound member function's qualifier is not deduced");
     }
 
     {
