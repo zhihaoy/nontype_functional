@@ -4,6 +4,7 @@ target_sources(run-function PRIVATE
  "test_basics.cpp"
  "common_callables.h"
  "common_callables.cpp"
+ "test_value_semantics.cpp"
  "test_ctad.cpp"
 )
 target_link_libraries(run-function PRIVATE nontype_functional kris-ut)

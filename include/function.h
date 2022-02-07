@@ -146,6 +146,12 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         std::byte storage_[sizeof(typical_target_object)];
 
     auto storage_location() noexcept -> void * { return &storage_; }
+
+    auto target() noexcept
+    {
+        return std::launder(reinterpret_cast<lvalue_callable *>(&storage_));
+    }
+
     auto target() const noexcept
     {
         return std::launder(
@@ -158,9 +164,10 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     function() noexcept { ::new (storage_location()) empty_target_object; }
     function(std::nullptr_t) noexcept : function() {}
 
-    template<class F>
+    template<class F, class FD = std::decay_t<F>>
     function(F &&f) requires _is_not_self<F, function> and
-        is_lvalue_invocable<F>
+        is_lvalue_invocable<F> and std::is_copy_constructible_v<FD> and
+        std::is_constructible_v<FD, F>
     {
         using T = target_object<std::unwrap_ref_decay_t<F>>;
         static_assert(sizeof(T) <= sizeof(storage_));
@@ -168,12 +175,33 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         ::new (storage_location()) T(std::forward<F>(f));
     }
 
-    function(function const &other) { other.target()->copy_into(&storage_); }
+    function(function const &other) { other.target()->copy_into(storage_); }
+    function(function &&other) noexcept { other.target()->move_into(storage_); }
 
-    function(function &&other) noexcept
+    function &operator=(function const &other)
     {
-        other.target()->move_into(&storage_);
+        if (&other != this)
+        {
+            auto tmp = other;
+            swap(tmp);
+        }
+
+        return *this;
     }
+
+    function &operator=(function &&other) noexcept
+    {
+        if (&other != this)
+        {
+            this->~function();
+            return *::new ((void *)this) auto(std::move(other));
+        }
+        else
+            return *this;
+    }
+
+    void swap(function &other) noexcept { std::swap<function>(*this, other); }
+    friend void swap(function &lhs, function &rhs) noexcept { lhs.swap(rhs); }
 
     ~function() { target()->~lvalue_callable(); }
 
