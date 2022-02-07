@@ -9,11 +9,14 @@ void test_ctad()
     {
         function fn = [i = 0] { return 0; };
         static_assert(std::is_same_v<decltype(fn), function<int()>>);
+        static_assert(std::is_same_v<decltype(fn)::result_type, int>);
     }
 
     {
-        function fn = [i = 0]() mutable { return 0; };
-        static_assert(std::is_same_v<decltype(fn), function<int()>>);
+        function fn = [i = 0](int &&, int const) mutable { return "lit"; };
+        static_assert(
+            std::is_same_v<decltype(fn), function<char const *(int &&, int)>>);
+        static_assert(std::is_same_v<decltype(fn)::result_type, char const *>);
     }
 
     {
@@ -35,6 +38,7 @@ void test_ctad()
         lvalue_only lv;
         function fn = lv;
         static_assert(std::is_same_v<decltype(fn), function<void(double &)>>);
+        static_assert(std::is_same_v<decltype(fn)::result_type, void>);
     }
 
     static_assert(deduction_enabled<lvalue_only>);
