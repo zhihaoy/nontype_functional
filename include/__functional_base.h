@@ -52,7 +52,8 @@ struct _adapt_signature<F *>
 
 template<class Fp> using _adapt_signature_t = _adapt_signature<Fp>::type;
 
-template<class S> struct _not_qualifying_this;
+template<class S> struct _not_qualifying_this
+{};
 
 template<class R, class... Args> struct _not_qualifying_this<R(Args...)>
 {

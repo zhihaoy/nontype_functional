@@ -15,3 +15,4 @@ using std23::function;
 #endif
 
 int f();
+int f_good() noexcept;

@@ -37,9 +37,9 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 {
     using signature = _opt_fn_sig<S>;
 
-    template<class... T>
-    static constexpr bool is_invocable_using =
-        signature::template is_invocable_using<T...>;
+    template<class T>
+    static constexpr bool is_lvalue_invocable =
+        signature::template is_invocable_using<T &>;
 
     struct lvalue_callable
     {
@@ -159,7 +159,8 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     function(std::nullptr_t) noexcept : function() {}
 
     template<class F>
-    function(F &&f) requires _is_not_self<F, function> and is_invocable_using<F>
+    function(F &&f) requires _is_not_self<F, function> and
+        is_lvalue_invocable<F>
     {
         using T = target_object<std::unwrap_ref_decay_t<F>>;
         static_assert(sizeof(T) <= sizeof(storage_));
