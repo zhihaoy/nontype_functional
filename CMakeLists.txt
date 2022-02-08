@@ -1,4 +1,14 @@
 ﻿cmake_minimum_required(VERSION 3.15)
+
+get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(is_multi_config)
+    set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo CACHE STRING
+        "Semicolon separated list of supported configuration types")
+    mark_as_advanced(CMAKE_CONFIGURATION_TYPES)
+elseif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CXX_FLAGS)
+    message(WARNING "No CMAKE_BUILD_TYPE is selected")
+endif()
+
 project(nontype_functional NONE)
 enable_language(CXX)
 

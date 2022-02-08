@@ -5,9 +5,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  BUILD_TYPE: Debug
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -31,17 +28,22 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
 
     - name: Enable AddressSanitizer
-      if: startsWith(matrix.os, 'ubuntu')
       run: |
         echo "CXXFLAGS=-fsanitize=address" >> $GITHUB_ENV
         echo "LDFLAGS=-fsanitize=address" >> $GITHUB_ENV
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/build -G "Ninja Multi-Config"
 
     - name: Build
-      run: ninja -C ${{github.workspace}}/build
+      run: |
+        cmake --build ${{github.workspace}}/build --config Debug
+        cmake --build ${{github.workspace}}/build --config RelWithDebInfo
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest --output-on-failure
+      env:
+        ASAN_OPTIONS: windows_hook_rtl_allocators=true
+      run: |
+        ctest --output-on-failure -C Debug
+        ctest --output-on-failure -C RelWithDebInfo
