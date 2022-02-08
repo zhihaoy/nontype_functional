@@ -142,6 +142,17 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         }
     };
 
+    template<class F>
+    using target_object_for = target_object<std::unwrap_ref_decay_t<F>>;
+
+    template<class F>
+    static bool constexpr is_nothrow_initializer =
+        std::is_nothrow_constructible_v<target_object_for<F>, F>;
+
+    template<class F, class FD = std::decay_t<F>>
+    static bool constexpr is_viable_initializer =
+        std::is_copy_constructible_v<FD> and std::is_constructible_v<FD, F>;
+
     alignas(typical_target_object)
         std::byte storage_[sizeof(typical_target_object)];
 
@@ -164,12 +175,12 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     function() noexcept { ::new (storage_location()) empty_target_object; }
     function(std::nullptr_t) noexcept : function() {}
 
-    template<class F, class FD = std::decay_t<F>>
-    function(F &&f) requires _is_not_self<F, function> and
-        is_lvalue_invocable<F> and std::is_copy_constructible_v<FD> and
-        std::is_constructible_v<FD, F>
+    template<class F>
+    function(F &&f) noexcept(is_nothrow_initializer<F>) requires
+        _is_not_self<F, function> and is_lvalue_invocable<F> and
+        is_viable_initializer<F>
     {
-        using T = target_object<std::unwrap_ref_decay_t<F>>;
+        using T = target_object_for<F>;
         static_assert(sizeof(T) <= sizeof(storage_));
 
         ::new (storage_location()) T(std::forward<F>(f));
