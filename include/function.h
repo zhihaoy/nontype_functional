@@ -30,20 +30,11 @@ template<class R, class... Args> struct _opt_fn_sig<R(Args..., ...)>
         std::is_invocable_r_v<R, T..., Args..., va_list>;
 };
 
-template<class S, class = typename _opt_fn_sig<S>::function_type>
-class function;
-
-template<class S, class R, class... Args> class function<S, R(Args...)>
+template<class R, class... Args> struct _copyable_function
 {
-    using signature = _opt_fn_sig<S>;
-
-    template<class T>
-    static constexpr bool is_lvalue_invocable =
-        signature::template is_invocable_using<T &>;
-
     struct lvalue_callable
     {
-        virtual R operator()(_param_t<Args>...) const = 0;
+        virtual R operator()(Args...) const = 0;
         virtual ~lvalue_callable() = default;
 
         void copy_into(std::byte *storage) const { copy_into_(storage); }
@@ -54,22 +45,9 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         virtual void move_into_(void *) noexcept = 0;
     };
 
-    struct typical_target_object : lvalue_callable
-    {
-        R operator()(_param_t<Args>...) const override;
-        void copy_into_(void *) const override;
-        void move_into_(void *) noexcept override;
-
-        union
-        {
-            void (*fp)() = nullptr;
-            void *p;
-        };
-    };
-
     struct empty_target_object : lvalue_callable
     {
-        [[noreturn]] R operator()(_param_t<Args>...) const override
+        [[noreturn]] R operator()(Args...) const override
         {
             throw std::bad_function_call{};
         }
@@ -90,7 +68,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         std::conditional_t<std::is_pointer_v<T>, T, std::unique_ptr<T>> p_;
 
       public:
-        R operator()(_param_t<Args>... args) const override
+        R operator()(Args... args) const override
         {
             return std23::invoke_r<R>(*p_, std::forward<Args>(args)...);
         }
@@ -124,7 +102,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         T &target_;
 
       public:
-        R operator()(_param_t<Args>... args) const override
+        R operator()(Args... args) const override
         {
             return std23::invoke_r<R>(target_, std::forward<Args>(args)...);
         }
@@ -141,9 +119,39 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
             ::new (location) auto(*this);
         }
     };
+};
+
+template<class S, class = typename _opt_fn_sig<S>::function_type>
+class function;
+
+template<class S, class R, class... Args> class function<S, R(Args...)>
+{
+    using signature = _opt_fn_sig<S>;
+
+    template<class T>
+    static constexpr bool is_lvalue_invocable =
+        signature::template is_invocable_using<T &>;
+
+    using copyable_function =
+        std::conditional_t<signature::is_variadic,
+                           _copyable_function<R, _param_t<Args>..., va_list>,
+                           _copyable_function<R, _param_t<Args>...>>;
+
+    using lvalue_callable = copyable_function::lvalue_callable;
+    using empty_target_object = copyable_function::empty_target_object;
+
+    struct typical_target_object : lvalue_callable
+    {
+        union
+        {
+            void (*fp)() = nullptr;
+            void *p;
+        };
+    };
 
     template<class F>
-    using target_object_for = target_object<std::unwrap_ref_decay_t<F>>;
+    using target_object_for =
+        copyable_function::template target_object<std::unwrap_ref_decay_t<F>>;
 
     template<class F>
     static bool constexpr is_nothrow_initializer =
@@ -235,7 +243,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         return !f;
     }
 
-    R operator()(Args... args) const
+    R operator()(Args... args) const requires(not signature::is_variadic)
     {
         return (*target())(std::forward<Args>(args)...);
     }
