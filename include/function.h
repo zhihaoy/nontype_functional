@@ -183,6 +183,15 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         using T = target_object_for<F>;
         static_assert(sizeof(T) <= sizeof(storage_));
 
+        if constexpr (_looks_nullable_to<F, function>)
+        {
+            if (f == nullptr)
+            {
+                ::new ((void *)this) function(nullptr);
+                return;
+            }
+        }
+
         ::new (storage_location()) T(std::forward<F>(f));
     }
 

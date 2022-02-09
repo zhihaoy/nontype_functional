@@ -7,6 +7,7 @@ target_sources(run-function PRIVATE
  "test_value_semantics.cpp"
  "test_ctad.cpp"
  "test_reference_semantics.cpp"
+ "test_nullable.cpp"
 )
 target_link_libraries(run-function PRIVATE nontype_functional kris-ut)
 set_target_properties(run-function PROPERTIES OUTPUT_NAME run)
