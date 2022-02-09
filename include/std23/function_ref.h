@@ -1,4 +1,5 @@
-﻿#pragma once
+#ifndef INCLUDE_STD23_FUNCTION__REF
+#define INCLUDE_STD23_FUNCTION__REF
 
 #include "__functional_base.h"
 
@@ -182,3 +183,5 @@ function_ref(nontype_t<V>, auto)
     -> function_ref<_drop_first_arg_to_invoke_t<decltype(V)>>;
 
 } // namespace std23
+
+#endif

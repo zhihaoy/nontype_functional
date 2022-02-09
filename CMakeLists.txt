@@ -9,8 +9,7 @@ elseif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CXX_FLAGS)
     message(WARNING "No CMAKE_BUILD_TYPE is selected")
 endif()
 
-project(nontype_functional NONE)
-enable_language(CXX)
+project(nontype_functional LANGUAGES CXX)
 
 include(CTest)
 
@@ -29,9 +28,9 @@ endif()
 
 add_library(nontype_functional INTERFACE)
 target_sources(nontype_functional INTERFACE
- "include/function_ref.h"
- "include/function.h"
- "include/__functional_base.h"
+ "include/std23/function_ref.h"
+ "include/std23/function.h"
+ "include/std23/__functional_base.h"
 )
 target_include_directories(nontype_functional
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

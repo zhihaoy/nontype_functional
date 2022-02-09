@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INCLUDE_STD23_FUNCTION
+#define INCLUDE_STD23_FUNCTION
 
 #include "__functional_base.h"
 
@@ -261,3 +262,5 @@ template<class T>
 function(T) -> function<_drop_first_arg_to_invoke_t<decltype(&T::operator())>>;
 
 } // namespace std23
+
+#endif

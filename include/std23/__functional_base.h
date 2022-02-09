@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INCLUDE_STD23____FUNCTIONAL__BASE
+#define INCLUDE_STD23____FUNCTIONAL__BASE
 
 #include <functional>
 #include <utility>
@@ -156,3 +157,5 @@ template<class Fp>
 using _drop_first_arg_to_invoke_t = _drop_first_arg_to_invoke<Fp>::type;
 
 } // namespace std23
+
+#endif
