@@ -3,6 +3,7 @@
 
 #include "__functional_base.h"
 
+#include <cstdarg>
 #include <memory>
 #include <new>
 
@@ -21,7 +22,7 @@ template<class R, class... Args> struct _opt_fn_sig<R(Args...)>
         std::is_invocable_r_v<R, T..., Args...>;
 };
 
-template<class R, class... Args> struct _opt_fn_sig<R(Args..., ...)>
+template<class R, class... Args> struct _opt_fn_sig<R(Args......)>
 {
     using function_type = R(Args...);
     static constexpr bool is_variadic = true;
@@ -135,7 +136,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 
     using copyable_function =
         std::conditional_t<signature::is_variadic,
-                           _copyable_function<R, _param_t<Args>..., va_list>,
+                           _copyable_function<R, _param_t<Args>..., va_list &>,
                            _copyable_function<R, _param_t<Args>...>>;
 
     using lvalue_callable = copyable_function::lvalue_callable;
@@ -244,10 +245,31 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         return !f;
     }
 
-    R operator()(Args... args) const requires(not signature::is_variadic)
+    R operator()(Args... args) const requires(!signature::is_variadic)
     {
         return (*target())(std::forward<Args>(args)...);
     }
+
+#if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
+#endif
+
+    R operator()(Args... args...) const
+        requires(signature::is_variadic and sizeof...(Args) != 0)
+    {
+        struct raii
+        {
+            va_list data;
+            ~raii() { va_end(data); }
+        } va;
+        va_start(va.data, (args, ...));
+        return (*target())(std::forward<Args>(args)..., va.data);
+    }
+
+#if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
+#pragma GCC diagnostic pop
+#endif
 };
 
 // clang-format off
