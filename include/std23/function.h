@@ -139,8 +139,8 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
                            _copyable_function<R, _param_t<Args>..., va_list &>,
                            _copyable_function<R, _param_t<Args>...>>;
 
-    using lvalue_callable = copyable_function::lvalue_callable;
-    using empty_target_object = copyable_function::empty_target_object;
+    using lvalue_callable = typename copyable_function::lvalue_callable;
+    using empty_target_object = typename copyable_function::empty_target_object;
 
     struct typical_target_object : lvalue_callable
     {
@@ -153,7 +153,8 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 
     template<class F>
     using target_object_for =
-        copyable_function::template target_object<std::unwrap_ref_decay_t<F>>;
+        typename copyable_function::template target_object<
+            std::unwrap_ref_decay_t<F>>;
 
     template<class F>
     static bool constexpr is_nothrow_initializer =
@@ -250,9 +251,14 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         return (*target())(std::forward<Args>(args)...);
     }
 
-#if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
+#if defined(__GNUC__)
+#if !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-value"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-value"
+#endif
 #endif
 
     R operator()(Args... args...) const
@@ -267,8 +273,12 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         return (*target())(std::forward<Args>(args)..., va.data);
     }
 
-#if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
+#if defined(__GNUC__)
+#if !defined(__clang__)
 #pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
 #endif
 };
 

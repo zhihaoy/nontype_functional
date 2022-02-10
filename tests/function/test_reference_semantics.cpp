@@ -63,7 +63,8 @@ suite reference_semantics = []
 };
 
 using T = function<void(int)>;
-using X = decltype([](int) {});
+static constexpr auto x = [](int) {};
+using X = decltype(x);
 
 static_assert(std::is_constructible_v<T, X>);
 static_assert(std::is_constructible_v<T, std::reference_wrapper<X>>);

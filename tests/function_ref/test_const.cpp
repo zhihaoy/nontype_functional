@@ -63,9 +63,11 @@ suite const_qualified = []
     };
 };
 
+#if !defined(__clang__)
 static_assert(not std::is_invocable_v<decltype(call), decltype([i = 0]() mutable
                                                                { return i; })>,
               "const-qualified signature cannot reference mutable lambda");
+#endif
 
 static_assert(std::is_invocable_v<decltype(foo), C_mut>);
 static_assert(std::is_invocable_v<decltype(foo), C_mut &>);

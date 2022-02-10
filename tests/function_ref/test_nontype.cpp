@@ -13,8 +13,10 @@ suite nttp_callable = []
         given("a function template specialization") = []
         { expect(call(nontype<g<int>>) == function_template); };
 
+#if !defined(__clang__)
         given("a closure") = []
         { expect(call(nontype<[] { return BODYN(42); }>) == 42_i); };
+#endif
     };
 
     feature("bound instance method") = []
@@ -50,10 +52,12 @@ suite nttp_callable = []
                 expect(call({nontype<h>, a}) == free_function);
             };
 
+#if !defined(__clang__)
             when("binding closure to object") = [&] {
                 expect(call({nontype<[](A p) { return BODYN(p.data); }>, a}) ==
                        99_i);
             };
+#endif
 
             when("passing objects using reference_wrapper") = [&]
             {

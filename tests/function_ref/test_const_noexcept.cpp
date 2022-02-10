@@ -77,6 +77,8 @@ suite const_noexcept_qualified = []
     };
 };
 
+#if !defined(__clang__)
+
 static_assert(
     not std::is_invocable_v<decltype(call), decltype([] { return 0; })>,
     "noexcept signature does not accept potentially-throwing lambda");
@@ -85,6 +87,8 @@ static_assert(
     not std::is_invocable_v<decltype(call),
                             decltype([i = 0]() mutable noexcept { return i; })>,
     "const noexcept signature does not accept noexcept but mutable lambda");
+
+#endif
 
 using U = function_ref<int() const noexcept>;
 
