@@ -47,78 +47,104 @@ template<class R, class... Args> struct _copyable_function
         virtual void move_into_(void *) noexcept = 0;
     };
 
-    struct empty_target_object : lvalue_callable
+    template<class Self> struct empty_object : lvalue_callable
+    {
+        void copy_into_(void *location) const override
+        {
+            ::new (location) Self;
+        }
+
+        void move_into_(void *location) noexcept override
+        {
+            ::new (location) Self;
+        }
+    };
+
+    struct constructible_lvalue : lvalue_callable
+    {
+        [[noreturn]] R operator()(Args...) const override
+        {
+#if defined(_MSC_VER)
+            __assume(0);
+#else
+            __builtin_unreachable();
+#endif
+        }
+    };
+
+    template<class T, class Self> class stored_object : constructible_lvalue
+    {
+        std::conditional_t<std::is_pointer_v<T>, T, std::unique_ptr<T>> p_;
+
+      public:
+        template<class F>
+        explicit stored_object(F &&f) requires(
+            _is_not_self<F, stored_object> and not std::is_pointer_v<T>)
+            : p_(std::make_unique<T>(std::forward<F>(f)))
+        {}
+
+        explicit stored_object(T p) noexcept requires std::is_pointer_v<T>
+            : p_(p)
+        {}
+
+      protected:
+        decltype(auto) get() const { return *p_; }
+
+        void copy_into_(void *location) const override
+        {
+            ::new (location) Self(get());
+        }
+
+        void move_into_(void *location) noexcept override
+        {
+            ::new (location) Self(std::move(*this));
+        }
+    };
+
+    template<class T, class Self>
+    class stored_object<T &, Self> : constructible_lvalue
+    {
+        T &target_;
+
+      public:
+        explicit stored_object(T &target) noexcept : target_(target) {}
+
+      protected:
+        decltype(auto) get() const { return target_; }
+
+        void copy_into_(void *location) const override
+        {
+            ::new (location) Self(*this);
+        }
+
+        void move_into_(void *location) noexcept override
+        {
+            ::new (location) Self(*this);
+        }
+    };
+
+    struct empty_target_object : empty_object<empty_target_object>
     {
         [[noreturn]] R operator()(Args...) const override
         {
             throw std::bad_function_call{};
         }
-
-        void copy_into_(void *location) const override
-        {
-            ::new (location) empty_target_object;
-        }
-
-        void move_into_(void *location) noexcept override
-        {
-            ::new (location) empty_target_object;
-        }
     };
 
-    template<class T> class target_object : lvalue_callable
+    template<class T> class target_object : stored_object<T, target_object<T>>
     {
-        std::conditional_t<std::is_pointer_v<T>, T, std::unique_ptr<T>> p_;
+        using base = stored_object<T, target_object<T>>;
 
       public:
-        R operator()(Args... args) const override
-        {
-            return std23::invoke_r<R>(*p_, std::forward<Args>(args)...);
-        }
-
         template<class F>
-        explicit target_object(F &&f) requires(
-            _is_not_self<F, target_object> and not std::is_pointer_v<T>)
-            : p_(std::make_unique<T>(std::forward<F>(f)))
+        explicit target_object(F &&f) noexcept(
+            std::is_nothrow_constructible_v<base, F>) requires
+            _is_not_self<F, target_object> : base(std::forward<F>(f))
         {}
 
-        explicit target_object(T p) noexcept requires std::is_pointer_v<T>
-            : p_(p)
-        {}
-
-        void copy_into_(void *location) const override
-        {
-            if constexpr (std::is_pointer_v<T>)
-                ::new (location) auto(*this);
-            else
-                ::new (location) target_object(*p_);
-        }
-
-        void move_into_(void *location) noexcept override
-        {
-            ::new (location) auto(std::move(*this));
-        }
-    };
-
-    template<class T> class target_object<T &> : lvalue_callable
-    {
-        T &target_;
-
-      public:
         R operator()(Args... args) const override
         {
-            return std23::invoke_r<R>(target_, std::forward<Args>(args)...);
-        }
-
-        explicit target_object(T &target) noexcept : target_(target) {}
-
-        void copy_into_(void *location) const override
-        {
-            ::new (location) auto(*this);
-        }
-
-        void move_into_(void *location) noexcept override
-        {
-            ::new (location) auto(*this);
+            return std23::invoke_r<R>(this->get(), std::forward<Args>(args)...);
         }
     };
 };
