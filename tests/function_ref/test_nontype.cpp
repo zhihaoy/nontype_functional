@@ -42,8 +42,10 @@ suite nttp_callable = []
                 expect(call({nontype<&A::k>, &b}) == ch<'k'>);
             };
 
-            when("binding pointer to data member to object") = [&] {
+            when("binding pointer to data member to object") = [&]
+            {
                 expect(call({nontype<&A::data>, a}) == 99_i);
+                expect(call({nontype<&A::data>, &a}) == 99_i);
             };
 
             when("binding free function to object") = [&] {
@@ -53,6 +55,11 @@ suite nttp_callable = []
             when("binding closure to object") = [&] {
                 expect(call({nontype<[](A p) { return BODYN(p.data); }>, a}) ==
                        99_i);
+            };
+
+            when("binding closure to pointer") = [&] {
+                expect(call({nontype<[](A *p) { return BODYN(p->data); }>,
+                             &a}) == 99_i);
             };
 
             when("passing objects using reference_wrapper") = [&]

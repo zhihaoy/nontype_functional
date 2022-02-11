@@ -100,10 +100,6 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     static constexpr bool is_invocable_using =
         signature::template is_invocable_using<T...>;
 
-    template<class F, class... T>
-    static constexpr bool is_memfn_invocable_using =
-        is_invocable_using<F, T...> and std::is_member_pointer_v<F>;
-
   public:
     template<class F>
     function_ref(F *f) noexcept requires std::is_function_v<F> and
@@ -125,7 +121,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
                   cvref<T> obj = *get<T>(fn_);
                   return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
               }),
-          obj_(std::addressof(static_cast<T &>(f)))
+          obj_(std::addressof(f))
     {}
 
     template<auto F>
@@ -146,12 +142,12 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
                   return std23::invoke_r<R>(F, obj,
                                             std::forward<Args>(args)...);
               }),
-          obj_(std::addressof(static_cast<U>(obj)))
+          obj_(std::addressof(obj))
     {}
 
     template<auto F, class T>
     function_ref(nontype_t<F>, cv<T> *obj) noexcept requires
-        is_memfn_invocable_using<decltype(F), decltype(obj)>
+        is_invocable_using<decltype(F), decltype(obj)>
         : fptr_(
               [](storage this_, _param_t<Args>... args)
               {
