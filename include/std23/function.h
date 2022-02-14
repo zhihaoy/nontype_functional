@@ -223,7 +223,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         {
             if (f == nullptr)
             {
-                ::new ((void *)this) function(nullptr);
+                std::construct_at(this);
                 return;
             }
         }
@@ -249,8 +249,8 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     {
         if (&other != this)
         {
-            this->~function();
-            return *::new ((void *)this) auto(std::move(other));
+            std::destroy_at(this);
+            return *std::construct_at(this, std::move(other));
         }
         else
             return *this;
@@ -259,7 +259,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     void swap(function &other) noexcept { std::swap<function>(*this, other); }
     friend void swap(function &lhs, function &rhs) noexcept { lhs.swap(rhs); }
 
-    ~function() { target()->~lvalue_callable(); }
+    ~function() { std::destroy_at(target()); }
 
     explicit operator bool() const noexcept
     {
