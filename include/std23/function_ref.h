@@ -132,9 +132,9 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     {}
 
     template<class T>
-    function_ref &operator=(T f) requires(_is_not_self<T, function_ref> and
-                                          not std::is_pointer_v<T> and
-                                          is_invocable_using<T>) = delete;
+    function_ref &operator=(T) requires(_is_not_self<T, function_ref> and
+                                        not std::is_pointer_v<T> and
+                                        is_invocable_using<cvref<T>>) = delete;
 
     template<auto F>
     constexpr function_ref(nontype_t<F>) noexcept requires
