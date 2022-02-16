@@ -17,14 +17,6 @@ suite safety = []
 {
     using namespace bdd;
 
-    using T = function_ref<int(A)>;
-    static_assert(not std::is_default_constructible_v<T>,
-                  "function_ref is not nullable");
-    static_assert(not std::is_constructible_v<T, decltype(&A::g)>,
-                  "function_ref doesn't initialize from member pointers");
-    static_assert(not std::is_constructible_v<T, decltype(&A::k)>);
-    static_assert(not std::is_constructible_v<T, decltype(&A::data)>);
-
     "safety"_test = []
     {
         given("a function_ref initialized from a function pointer") = []
@@ -45,3 +37,24 @@ suite safety = []
         };
     };
 };
+
+using T = function_ref<int(A)>;
+
+static_assert(not std::is_default_constructible_v<T>,
+              "function_ref is not nullable");
+static_assert(not std::is_constructible_v<T, decltype(&A::g)>,
+              "function_ref doesn't initialize from member pointers");
+static_assert(not std::is_constructible_v<T, decltype(&A::k)>);
+static_assert(not std::is_constructible_v<T, decltype(&A::data)>);
+
+using U = function_ref<int()>;
+
+static_assert(std::is_trivially_copy_constructible_v<U>);
+static_assert(std::is_trivially_copy_assignable_v<U>);
+static_assert(std::is_nothrow_constructible_v<U, C>);
+static_assert(not std::is_assignable_v<U, C>,
+              "function_ref does not assign from types that may dangle");
+static_assert(not std::is_assignable_v<U, C &>,
+              "function_ref rejects lvalue of those types as well");
+static_assert(not std::is_assignable_v<U &, C>);
+static_assert(not std::is_assignable_v<U &, C &>);

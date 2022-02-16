@@ -66,7 +66,7 @@ suite call_pattern = []
                 expect(fr() == some_str);
 
                 auto fn = [i = 0] { return some_str.data(); };
-                fr = fn;
+                fr = decltype(fr)(fn);
 
                 expect(fr() == some_str);
             };
