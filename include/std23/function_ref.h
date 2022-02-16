@@ -105,21 +105,28 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     function_ref(F *f) noexcept requires std::is_function_v<F> and
         is_invocable_using<F>
         : fptr_(
-              [](storage fn_, _param_t<Args>... args) {
-                  return std23::invoke_r<R>(get<F>(fn_),
-                                            std::forward<Args>(args)...);
+              [](storage fn_, _param_t<Args>... args) -> R
+              {
+                  if (std::is_void_v<R>)
+                      get<F>(fn_)(std::forward<Args>(args)...);
+                  else
+                      return get<F>(fn_)(std::forward<Args>(args)...);
               }),
           obj_(f)
     {}
 
     template<class F, class T = std::remove_reference_t<F>>
-    function_ref(F &&f) noexcept requires _is_not_self<F, function_ref> and
-        is_invocable_using<cvref<T>>
+    function_ref(F &&f) noexcept requires(_is_not_self<F, function_ref> and
+                                          not std::is_member_pointer_v<T> and
+                                          is_invocable_using<cvref<T>>)
         : fptr_(
-              [](storage fn_, _param_t<Args>... args)
+              [](storage fn_, _param_t<Args>... args) -> R
               {
                   cvref<T> obj = *get<T>(fn_);
-                  return std23::invoke_r<R>(obj, std::forward<Args>(args)...);
+                  if (std::is_void_v<R>)
+                      obj(std::forward<Args>(args)...);
+                  else
+                      return obj(std::forward<Args>(args)...);
               }),
           obj_(std::addressof(f))
     {}

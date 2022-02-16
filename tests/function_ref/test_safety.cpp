@@ -18,7 +18,12 @@ suite safety = []
     using namespace bdd;
 
     using T = function_ref<int(A)>;
-    static_assert(not std::is_default_constructible_v<T>);
+    static_assert(not std::is_default_constructible_v<T>,
+                  "function_ref is not nullable");
+    static_assert(not std::is_constructible_v<T, decltype(&A::g)>,
+                  "function_ref doesn't initialize from member pointers");
+    static_assert(not std::is_constructible_v<T, decltype(&A::k)>);
+    static_assert(not std::is_constructible_v<T, decltype(&A::data)>);
 
     "safety"_test = []
     {

@@ -1,5 +1,7 @@
 #include "common_callables.h"
 
+#include <string>
+
 struct Base
 {
     int &n;
@@ -17,6 +19,13 @@ static_assert(not std::is_trivially_move_constructible_v<Track>);
 
 static void make_call(Track &&)
 {}
+
+inline constexpr char some_str[] = "if you see this, then we're fine";
+
+static auto f_str()
+{
+    return some_str;
+};
 
 suite call_pattern = []
 {
@@ -48,5 +57,20 @@ suite call_pattern = []
             };
         } | std::tuple(type<function_ref<void(Track)>>,
                        type<std::function<void(Track)>>);
+
+        given("a function_ref that has a nontrivial return type") = []
+        {
+            function_ref<std::string()> fr = f_str;
+
+            then("its erased functions can return different types") = [&]
+            {
+                expect(fr() == some_str);
+
+                auto fn = [i = 0] { return some_str; };
+                fr = fn;
+
+                expect(fr() == some_str);
+            };
+        };
     };
 };
