@@ -1,7 +1,5 @@
 #include "common_callables.h"
 
-#include <string>
-
 struct Base
 {
     int &n;
@@ -20,11 +18,12 @@ static_assert(not std::is_trivially_move_constructible_v<Track>);
 static void make_call(Track &&)
 {}
 
-inline constexpr char some_str[] = "if you see this, then we're fine";
+using namespace std::string_view_literals;
+inline constexpr auto some_str = "if you see this, then we're fine"sv;
 
 static auto f_str()
 {
-    return some_str;
+    return some_str.data();
 };
 
 suite call_pattern = []
@@ -66,7 +65,7 @@ suite call_pattern = []
             {
                 expect(fr() == some_str);
 
-                auto fn = [i = 0] { return some_str; };
+                auto fn = [i = 0] { return some_str.data(); };
                 fr = fn;
 
                 expect(fr() == some_str);
