@@ -123,7 +123,7 @@ template<class R, class... Args> struct _copyable_function
         }
     };
 
-    struct empty_target_object : empty_object<empty_target_object>
+    struct empty_target_object final : empty_object<empty_target_object>
     {
         [[noreturn]] R operator()(Args...) const override
         {
@@ -131,7 +131,8 @@ template<class R, class... Args> struct _copyable_function
         }
     };
 
-    template<class T> class target_object : stored_object<T, target_object<T>>
+    template<class T>
+    class target_object final : stored_object<T, target_object<T>>
     {
         using base = stored_object<T, target_object<T>>;
 
