@@ -20,8 +20,17 @@ void test_ctad()
     }
 
     {
-        auto closure = [i = 0]() noexcept { return 0; };
-        static_assert(not deduction_enabled<decltype(closure)>);
+        function fn = f_good;
+        static_assert(std::is_same_v<decltype(fn), function<int()>>,
+                      "[conv.fctptr]/1");
+        static_assert(std::is_same_v<decltype(fn)::result_type, int>);
+    }
+
+    {
+        function fn = [i = 0]() noexcept { return 0; };
+        static_assert(std::is_same_v<decltype(fn), function<int()>>,
+                      "[func.wrap.func.con]/16");
+        static_assert(std::is_same_v<decltype(fn)::result_type, int>);
     }
 
     struct lvalue_only
@@ -44,8 +53,4 @@ void test_ctad()
     static_assert(deduction_enabled<lvalue_only>);
     static_assert(not deduction_enabled<rvalue_only>,
                   "function requires F to be Lvalue-Callable");
-
-    static_assert(deduction_enabled<decltype(f)>);
-    static_assert(not deduction_enabled<decltype(f_good)>,
-                  "function has no noexcept signature");
 }

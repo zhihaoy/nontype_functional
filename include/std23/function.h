@@ -299,16 +299,31 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 #endif
 };
 
+template<class S> struct _strip_noexcept;
+
+template<class R, class... Args> struct _strip_noexcept<R(Args...)>
+{
+    using type = R(Args...);
+};
+
+template<class R, class... Args> struct _strip_noexcept<R(Args...) noexcept>
+{
+    using type = R(Args...);
+};
+
+template<class S> using _strip_noexcept_t = _strip_noexcept<S>::type;
+
 // clang-format off
 
 template<class F>
 requires std::is_function_v<F>
-function(F *) -> function<F>;
+function(F *) -> function<_strip_noexcept_t<F>>;
 
 // clang-format on
 
 template<class T>
-function(T) -> function<_drop_first_arg_to_invoke_t<decltype(&T::operator())>>;
+function(T) -> function<
+    _strip_noexcept_t<_drop_first_arg_to_invoke_t<decltype(&T::operator())>>>;
 
 } // namespace std23
 

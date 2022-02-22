@@ -76,6 +76,12 @@ template<class R, class... Args> struct _not_qualifying_this<R(Args...)>
 };
 
 template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) noexcept>
+{
+    using type = R(Args...) noexcept;
+};
+
+template<class R, class... Args>
 struct _not_qualifying_this<R(Args...) const> : _not_qualifying_this<R(Args...)>
 {};
 
@@ -125,6 +131,61 @@ struct _not_qualifying_this<R(Args...) volatile &&>
 template<class R, class... Args>
 struct _not_qualifying_this<R(Args...) const volatile &&>
     : _not_qualifying_this<R(Args...)>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) volatile noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const volatile noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) &noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const &noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) volatile &noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const volatile &noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) &&noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const &&noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) volatile &&noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
+{};
+
+template<class R, class... Args>
+struct _not_qualifying_this<R(Args...) const volatile &&noexcept>
+    : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class T> struct _drop_first_arg_to_invoke;
