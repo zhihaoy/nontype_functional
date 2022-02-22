@@ -134,8 +134,8 @@ suite value_semantics = []
         given("three function objects") = []
         {
             function a = noop;
-            decltype(a) b = nullptr;
-            decltype(a) c = [](int &out) noexcept { out += 1; };
+            function<decltype(noop)> b = nullptr;
+            function c = [](int &out) noexcept { out += 1; };
 
             then("they can be self swapped") = [=]() mutable
             {
@@ -173,8 +173,9 @@ suite value_semantics = []
                 expect(behaves_like_noop(c));
             };
 
-            when("rotate them") = [ls = std::array{a, b, c}]() mutable
+            when("rotate them") = [&]
             {
+                std::array ls{a, b, c};
                 auto first = begin(ls);
                 std::rotate(first, std::next(first), end(ls));
 
