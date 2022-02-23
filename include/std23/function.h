@@ -37,7 +37,7 @@ template<class R, class... Args> struct _copyable_function
     struct lvalue_callable
     {
         virtual R operator()(Args...) const = 0;
-        virtual ~lvalue_callable() = default;
+        virtual constexpr ~lvalue_callable() = default;
 
         void copy_into(std::byte *storage) const { copy_into_(storage); }
         void move_into(std::byte *storage) noexcept { move_into_(storage); }
@@ -266,7 +266,8 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 
     explicit operator bool() const noexcept
     {
-        return dynamic_cast<empty_target_object const *>(target()) == nullptr;
+        constexpr empty_target_object null;
+        return __builtin_memcmp(storage_, &null, sizeof(void *)) != 0;
     }
 
     friend bool operator==(function const &f, std::nullptr_t) noexcept

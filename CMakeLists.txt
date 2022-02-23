@@ -19,11 +19,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 if(MSVC)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3>)
+    string(REPLACE "/GR" "/GR-" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 else()
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wconversion>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wsign-conversion>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wsign-compare>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 endif()
 
 add_library(nontype_functional INTERFACE)
