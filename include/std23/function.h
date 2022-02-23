@@ -78,13 +78,14 @@ template<class R, class... Args> struct _copyable_function
 
       public:
         template<class F>
-        explicit stored_object(F &&f) requires(
-            _is_not_self<F, stored_object> and not std::is_pointer_v<T>)
+        explicit stored_object(F &&f)
+            requires(_is_not_self<F, stored_object> and
+                     not std::is_pointer_v<T>)
             : p_(std::make_unique<T>(std::forward<F>(f)))
         {}
 
         explicit stored_object(T p) noexcept requires std::is_pointer_v<T>
-            : p_(p)
+        : p_(p)
         {}
 
       protected:
@@ -139,8 +140,9 @@ template<class R, class... Args> struct _copyable_function
       public:
         template<class F>
         explicit target_object(F &&f) noexcept(
-            std::is_nothrow_constructible_v<base, F>) requires
-            _is_not_self<F, target_object> : base(std::forward<F>(f))
+            std::is_nothrow_constructible_v<base, F>)
+            requires _is_not_self<F, target_object>
+            : base(std::forward<F>(f))
         {}
 
         R operator()(Args... args) const override
@@ -213,9 +215,9 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     function(std::nullptr_t) noexcept : function() {}
 
     template<class F>
-    function(F &&f) noexcept(is_nothrow_initializer<F>) requires
-        _is_not_self<F, function> and is_lvalue_invocable<F> and
-        is_viable_initializer<F>
+    function(F &&f) noexcept(is_nothrow_initializer<F>)
+        requires _is_not_self<F, function> and is_lvalue_invocable<F> and
+                 is_viable_initializer<F>
     {
         using T = target_object_for<F>;
         static_assert(sizeof(T) <= sizeof(storage_));
@@ -313,13 +315,8 @@ template<class R, class... Args> struct _strip_noexcept<R(Args...) noexcept>
 
 template<class S> using _strip_noexcept_t = _strip_noexcept<S>::type;
 
-// clang-format off
-
-template<class F>
-requires std::is_function_v<F>
+template<class F> requires std::is_function_v<F>
 function(F *) -> function<_strip_noexcept_t<F>>;
-
-// clang-format on
 
 template<class T>
 function(T) -> function<

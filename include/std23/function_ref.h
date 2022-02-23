@@ -55,16 +55,15 @@ struct _function_ref_base
 
         constexpr storage() noexcept = default;
 
-        template<class T>
-        requires std::is_object_v<T>
-        constexpr explicit storage(T *p) noexcept : p_(p) {}
+        template<class T> requires std::is_object_v<T>
+        constexpr explicit storage(T *p) noexcept : p_(p)
+        {}
 
-        template<class T>
-        requires std::is_object_v<T>
-        constexpr explicit storage(T const *p) noexcept : cp_(p) {}
+        template<class T> requires std::is_object_v<T>
+        constexpr explicit storage(T const *p) noexcept : cp_(p)
+        {}
 
-        template<class T>
-        requires std::is_function_v<T>
+        template<class T> requires std::is_function_v<T>
         constexpr explicit storage(T *p) noexcept
             : fp_(reinterpret_cast<decltype(fp_)>(p))
         {}
@@ -103,8 +102,8 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
 
   public:
     template<class F>
-    function_ref(F *f) noexcept requires std::is_function_v<F> and
-        is_invocable_using<F>
+    function_ref(F *f) noexcept
+        requires std::is_function_v<F> and is_invocable_using<F>
         : fptr_(
               [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
               {
@@ -120,34 +119,35 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     function_ref(F &&f) noexcept requires(_is_not_self<F, function_ref> and
                                           not std::is_member_pointer_v<T> and
                                           is_invocable_using<cvref<T>>)
-        : fptr_(
-              [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
-              {
-                  cvref<T> obj = *get<T>(fn_);
-                  if (std::is_void_v<R>)
-                      obj(std::forward<Args>(args)...);
-                  else
-                      return obj(std::forward<Args>(args)...);
-              }),
-          obj_(std::addressof(f))
+    : fptr_(
+          [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
+          {
+              cvref<T> obj = *get<T>(fn_);
+              if (std::is_void_v<R>)
+                  obj(std::forward<Args>(args)...);
+              else
+                  return obj(std::forward<Args>(args)...);
+          }),
+      obj_(std::addressof(f))
     {}
 
     template<class T>
-    function_ref &operator=(T) requires(_is_not_self<T, function_ref> and
-                                        not std::is_pointer_v<T> and
-                                        is_invocable_using<cvref<T>>) = delete;
+    function_ref &operator=(T)
+        requires(_is_not_self<T, function_ref> and not std::is_pointer_v<T> and
+                 is_invocable_using<cvref<T>>)
+        = delete;
 
     template<auto F>
-    constexpr function_ref(nontype_t<F>) noexcept requires
-        is_invocable_using<decltype(F)>
+    constexpr function_ref(nontype_t<F>) noexcept
+        requires is_invocable_using<decltype(F)>
         : fptr_([](storage, _param_t<Args>... args) noexcept(noex)
                 { return std23::invoke_r<R>(F, std::forward<Args>(args)...); })
     {}
 
     template<auto F, class U, class T = std::remove_reference_t<U>>
-    function_ref(nontype_t<F>,
-                 U &&obj) noexcept requires std::is_lvalue_reference_v<U> and
-        is_invocable_using<decltype(F), cvref<T>>
+    function_ref(nontype_t<F>, U &&obj) noexcept
+        requires std::is_lvalue_reference_v<U> and
+                     is_invocable_using<decltype(F), cvref<T>>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
               {
@@ -159,8 +159,8 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     {}
 
     template<auto F, class T>
-    function_ref(nontype_t<F>, cv<T> *obj) noexcept requires
-        is_invocable_using<decltype(F), decltype(obj)>
+    function_ref(nontype_t<F>, cv<T> *obj) noexcept
+        requires is_invocable_using<decltype(F), decltype(obj)>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
               {
@@ -176,13 +176,8 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     }
 };
 
-// clang-format off
-
-template<class F>
-requires std::is_function_v<F>
+template<class F> requires std::is_function_v<F>
 function_ref(F *) -> function_ref<F>;
-
-// clang-format on
 
 template<auto V>
 function_ref(nontype_t<V>) -> function_ref<_adapt_signature_t<decltype(V)>>;

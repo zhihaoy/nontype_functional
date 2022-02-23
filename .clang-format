@@ -3,6 +3,8 @@ BasedOnStyle: Microsoft
 ColumnLimit: '80'
 AllowShortFunctionsOnASingleLine: InlineOnly
 AlwaysBreakTemplateDeclarations: MultiLine
+IndentRequiresClause: false
+RequiresClausePosition: WithPreceding
 SpaceAfterTemplateKeyword: 'false'
 Standard: Latest
 BreakBeforeBraces: Custom

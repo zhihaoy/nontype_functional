@@ -58,8 +58,7 @@ inline constexpr bool _looks_nullable_to =
 
 template<class T> struct _adapt_signature;
 
-template<class F>
-requires std::is_function_v<F>
+template<class F> requires std::is_function_v<F>
 struct _adapt_signature<F *>
 {
     using type = F;
@@ -202,15 +201,13 @@ struct _drop_first_arg_to_invoke<R (*)(T, Args...) noexcept>
     using type = R(Args...) noexcept;
 };
 
-template<class T, class Cls>
-requires std::is_object_v<T>
+template<class T, class Cls> requires std::is_object_v<T>
 struct _drop_first_arg_to_invoke<T Cls::*>
 {
     using type = T();
 };
 
-template<class T, class Cls>
-requires std::is_function_v<T>
+template<class T, class Cls> requires std::is_function_v<T>
 struct _drop_first_arg_to_invoke<T Cls::*> : _not_qualifying_this<T>
 {};
 
