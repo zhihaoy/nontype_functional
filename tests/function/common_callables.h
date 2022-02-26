@@ -7,6 +7,7 @@
 using namespace boost::ut;
 
 using std23::function;
+using std23::nontype;
 
 #ifdef _MSC_VER
 #define BODYN(n) ((::boost::ut::log << __FUNCSIG__ << '\n'), n)

@@ -89,7 +89,13 @@ template<class R, class... Args> struct _copyable_function
         {}
 
       protected:
-        decltype(auto) get() const { return *p_; }
+        decltype(auto) get() const
+        {
+            if constexpr (std::is_pointer_v<T>)
+                return p_;
+            else
+                return *p_;
+        }
 
         void copy_into_(void *location) const override
         {
@@ -132,6 +138,15 @@ template<class R, class... Args> struct _copyable_function
         }
     };
 
+    template<auto f>
+    struct unbound_target_object final : empty_object<unbound_target_object<f>>
+    {
+        R operator()(Args... args) const override
+        {
+            return std23::invoke_r<R>(f, std::forward<Args>(args)...);
+        }
+    };
+
     template<class T>
     class target_object final : stored_object<T, target_object<T>>
     {
@@ -150,6 +165,27 @@ template<class R, class... Args> struct _copyable_function
             return std23::invoke_r<R>(this->get(), std::forward<Args>(args)...);
         }
     };
+
+    template<auto f, class T>
+    class bound_target_object final
+        : stored_object<T, bound_target_object<f, T>>
+    {
+        using base = stored_object<T, bound_target_object<f, T>>;
+
+      public:
+        template<class U>
+        explicit bound_target_object(U &&obj) noexcept(
+            std::is_nothrow_constructible_v<base, U>)
+            requires _is_not_self<U, bound_target_object>
+            : base(std::forward<U>(obj))
+        {}
+
+        R operator()(Args... args) const override
+        {
+            return std23::invoke_r<R>(f, this->get(),
+                                      std::forward<Args>(args)...);
+        }
+    };
 };
 
 template<class S, class = typename _opt_fn_sig<S>::function_type>
@@ -159,9 +195,11 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 {
     using signature = _opt_fn_sig<S>;
 
-    template<class T>
-    static constexpr bool is_lvalue_invocable =
-        signature::template is_invocable_using<T &>;
+    template<class... T>
+    static constexpr bool is_invocable_using =
+        signature::template is_invocable_using<T...>;
+
+    template<class T> using lvalue = std::decay_t<T> &;
 
     using copyable_function =
         std::conditional_t<signature::is_variadic,
@@ -184,9 +222,14 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     using target_object_for =
         copyable_function::template target_object<std::unwrap_ref_decay_t<F>>;
 
-    template<class F>
-    static bool constexpr is_nothrow_initializer =
-        std::is_nothrow_constructible_v<target_object_for<F>, F>;
+    template<auto f>
+    using unbound_target_object =
+        copyable_function::template unbound_target_object<f>;
+
+    template<auto f, class T>
+    using bound_target_object_for =
+        copyable_function::template bound_target_object<
+            f, std::unwrap_ref_decay_t<T>>;
 
     template<class F, class FD = std::decay_t<F>>
     static bool constexpr is_viable_initializer =
@@ -215,8 +258,9 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     function(std::nullptr_t) noexcept : function() {}
 
     template<class F>
-    function(F &&f) noexcept(is_nothrow_initializer<F>)
-        requires _is_not_self<F, function> and is_lvalue_invocable<F> and
+    function(F &&f) noexcept(
+        std::is_nothrow_constructible_v<target_object_for<F>, F>)
+        requires _is_not_self<F, function> and is_invocable_using<lvalue<F>> and
                  is_viable_initializer<F>
     {
         using T = target_object_for<F>;
@@ -232,6 +276,24 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         }
 
         ::new (storage_location()) T(std::forward<F>(f));
+    }
+
+    template<auto f>
+    function(nontype_t<f>) noexcept requires is_invocable_using<decltype(f)>
+    {
+        ::new (storage_location()) unbound_target_object<f>;
+    }
+
+    template<auto f, class U>
+    function(nontype_t<f>, U &&obj) noexcept(
+        std::is_nothrow_constructible_v<bound_target_object_for<f, U>, U>)
+        requires is_invocable_using<decltype(f), lvalue<U>> and
+                 is_viable_initializer<U>
+    {
+        using T = bound_target_object_for<f, U>;
+        static_assert(sizeof(T) <= sizeof(storage_));
+
+        ::new (storage_location()) T(std::forward<U>(obj));
     }
 
     function(function const &other) { other.target()->copy_into(storage_); }
@@ -322,6 +384,14 @@ function(F *) -> function<_strip_noexcept_t<F>>;
 template<class T>
 function(T) -> function<
     _strip_noexcept_t<_drop_first_arg_to_invoke_t<decltype(&T::operator())>>>;
+
+template<auto V>
+function(nontype_t<V>)
+    -> function<_strip_noexcept_t<_adapt_signature_t<decltype(V)>>>;
+
+template<auto V>
+function(nontype_t<V>, auto)
+    -> function<_strip_noexcept_t<_drop_first_arg_to_invoke_t<decltype(V)>>>;
 
 } // namespace std23
 

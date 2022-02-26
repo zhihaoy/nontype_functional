@@ -9,6 +9,7 @@ target_sources(run-function PRIVATE
  "test_reference_semantics.cpp"
  "test_nullable.cpp"
  "test_va_args.cpp"
+ "test_nontype.cpp"
 )
 set_source_files_properties("test_va_args.cpp" PROPERTIES
     COMPILE_DEFINITIONS $<$<CXX_COMPILER_ID:MSVC>:_CRT_NO_VA_START_VALIDATION>)
