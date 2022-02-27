@@ -176,3 +176,55 @@ suite nttp_callable = []
         };
     };
 };
+
+using std23::nontype_t;
+
+using T = function<int(int)>;
+
+static_assert(std::is_constructible_v<T, nontype_t<&A::add>, A>);
+static_assert(std::is_constructible_v<T, nontype_t<&A::add>, A const>,
+              "function<S> does not call the source object");
+static_assert(not std::is_invocable_v<decltype(&A::add), A const>);
+
+static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::add>, A *>);
+static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::add>,
+                                              std::reference_wrapper<A>>);
+static_assert(not std::is_constructible_v<T, nontype_t<&A::add>, A const *>,
+              "...unless we stored a pointer");
+static_assert(not std::is_constructible_v<T, nontype_t<&A::add>,
+                                          std::reference_wrapper<A const>>,
+              "...or reference_wrapper");
+
+using V = function<void(int)>;
+
+inline constexpr auto pure = [](A &, int) { return 0; };
+static_assert(std::is_constructible_v<V, nontype_t<pure>, A const &>,
+              "function has its own copy of target object");
+static_assert(not std::is_invocable_v<decltype(pure), A const &, int>);
+
+inline constexpr auto rvalue_only = [](A &&, int) { return 0; };
+static_assert(not std::is_constructible_v<V, nontype_t<rvalue_only>, A>,
+              "function's target object is used as an lvalue");
+static_assert(std::is_invocable_v<decltype(rvalue_only), A, int>);
+
+static_assert(std::is_constructible_v<V, nontype_t<&A::set>, A &>);
+static_assert(std::is_constructible_v<V, nontype_t<&A::set>, A *>);
+static_assert(std::is_constructible_v<V, nontype_t<pure>, A &>);
+static_assert(not std::is_constructible_v<V, nontype_t<pure>, A *>,
+              "do not call a closure through a pointer to first arg");
+
+using U = function<int()>;
+
+static_assert(std::is_constructible_v<U, nontype_t<&A::val>, A const>);
+static_assert(std::is_constructible_v<U, nontype_t<&A::val>, A const *>);
+static_assert(std::is_constructible_v<U, nontype_t<neg>, A const>);
+static_assert(not std::is_constructible_v<U, nontype_t<neg>, A const *>,
+              "do not call a free function through a pointer to first arg");
+
+using W = function<int(A)>;
+
+static_assert(std::is_nothrow_constructible_v<W, nontype_t<&A::val>>);
+static_assert(std::is_nothrow_constructible_v<W, nontype_t<neg>>,
+              "unbounded cases are always noexcept");
+static_assert(std::is_nothrow_assignable_v<W, nontype_t<&A::val>>);
+static_assert(std::is_nothrow_assignable_v<W, nontype_t<neg>>);
