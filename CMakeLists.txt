@@ -40,4 +40,5 @@ target_include_directories(nontype_functional
 
 if(BUILD_TESTING)
     add_subdirectory("tests")
+    add_subdirectory("examples")
 endif()
