@@ -1,6 +1,7 @@
 # nontype\<functional\>
 
-[![GitHub license](https://img.shields.io/github/license/zhihaoy/nontype_functional)](https://github.com/zhihaoy/nontype_functional/blob/main/LICENSE) ![CMake](https://github.com/zhihaoy/nontype_functional/actions/workflows/cmake.yml/badge.svg)
+[![GitHub license](https://img.shields.io/github/license/zhihaoy/nontype_functional)](https://github.com/zhihaoy/nontype_functional/blob/main/LICENSE)
+![CMake](https://github.com/zhihaoy/nontype_functional/actions/workflows/cmake.yml/badge.svg)
 
 
 Provide complete implementation of `std::function`, `std::function_ref`, and `std::move_only_function` equivalent to those in the C++23 `<functional>` header.
@@ -24,10 +25,10 @@ GCC >= 11.1
 
 ## Roadmap
 
-- [x] 0.8 -- `std::function_ref` & `std::function`
-- [ ] 0.9 -- `std::move_only_function`
-- [ ] 1.0 -- `nontype_t` constructors for `move_only_function`
-- [ ] 1.1 -- Support C++20 modules
+- [x] 0.8 – `std::function_ref` & `std::function`
+- [ ] 0.9 – `std::move_only_function`
+- [ ] 1.0 – `nontype_t` constructors for `move_only_function`
+- [ ] 1.1 – Support C++20 modules
 
 ## Getting started
 
@@ -51,7 +52,7 @@ int main()
 }
 ```
 
-Ignore the fact that the code has no error handling or resource-safety; the callable wrappers -- `function_ref` in the example, generalized the idea of *callbacks*. You can pass anything with a matching call pattern to another function -- `parse_ini` in here, without turning the latter into a template.
+Ignore the fact that the code has no error handling or resource-safety; the callable wrappers, `function_ref` in the example, generalized the idea of *callbacks*. You can pass anything with a matching call pattern to another function, `parse_ini` in here, without turning the latter into a template.
 
 Now, what if you have an existing class that can read data, but it's not a function object?
 
@@ -65,7 +66,7 @@ class data_source
 };
 ```
 
-Then you may designate a named member function -- `read` in this example, to serve the role of an `operator()`:
+Then you may designate a named member function, `read` in this example, to serve the role of an `operator()`:
 
 ```cpp
 using std23::nontype;
