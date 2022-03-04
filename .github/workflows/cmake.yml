@@ -47,3 +47,16 @@ jobs:
       run: |
         ctest --output-on-failure -C Debug
         ctest --output-on-failure -C RelWithDebInfo
+
+    - name: Install
+      run: >
+        cmake --install ${{github.workspace}}/build
+        --prefix ${{github.workspace}}/out
+
+    - name: Compile Examples
+      working-directory: ${{github.workspace}}/examples
+      env:
+        CMAKE_PREFIX_PATH: ${{github.workspace}}/out
+      run: |
+        cmake -B build -G Ninja
+        cmake --build build
