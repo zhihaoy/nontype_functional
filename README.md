@@ -1,10 +1,11 @@
 # nontype\<functional\>
 
+[![GitHub tag](https://img.shields.io/github/v/tag/zhihaoy/nontype_functional?sort=semver)](https://github.com/zhihaoy/nontype_functional/tags)
 [![GitHub license](https://img.shields.io/github/license/zhihaoy/nontype_functional)](https://github.com/zhihaoy/nontype_functional/blob/main/LICENSE)
-![CMake](https://github.com/zhihaoy/nontype_functional/actions/workflows/cmake.yml/badge.svg)
+[![CMake](https://github.com/zhihaoy/nontype_functional/actions/workflows/cmake.yml/badge.svg)](https://github.com/zhihaoy/nontype_functional/actions/workflows/cmake.yml)
 
 
-Provide complete implementation of `std::function`, `std::function_ref`, and `std::move_only_function` equivalent to those in the C++23 `<functional>` header.
+Provide complete implementation of `std::function`, `std::function_ref`, and `std::move_only_function`<sup>(coming)</sup> equivalent to those in the C++23 `<functional>` header.
 
 ## Highlights
 
@@ -18,17 +19,21 @@ The implementation does not guarantee the best performance under all use cases b
 
 ## Supported toolchains
 
-MSVC toolset >= 14.30
-<br/>
-GCC >= 11.1
+| Toolset              | Standard Library | Test Environment   |
+| -------------------- | ---------------- | ------------------ |
+| GCC >= 11.1.0        | libstdc++        | Ubuntu 20.04       |
+| MSVC >= 14.30        | Microsoft STL    | Visual Studio 2022 |
 
 
-## Roadmap
+## Installation
 
-- [x] 0.8 – `std::function_ref` & `std::function`
-- [ ] 0.9 – `std::move_only_function`
-- [ ] 1.0 – `nontype_t` constructors for `move_only_function`
-- [ ] 1.1 – Support C++20 modules
+It's a header-only library. You may also install and consume its CMake targets:
+
+```cmake
+find_package(nontype_functional CONFIG REQUIRED)
+target_link_libraries("main" PRIVATE std23::nontype_functional)
+```
+
 
 ## Getting started
 
@@ -92,6 +97,15 @@ int main()
 ```
 
 Feels like creating a member function for `FILE` on the fly, isn't it?
+
+
+## Roadmap
+
+- [x] 0.8 – `std::function_ref` & `std::function`
+- [ ] 0.9 – `std::move_only_function`
+- [ ] 1.0 – `nontype_t` constructors for `move_only_function`
+- [ ] 1.1 – Support C++20 modules
+
 
 ## See also
 
