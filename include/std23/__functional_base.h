@@ -148,42 +148,42 @@ struct _not_qualifying_this<R(Args...) const volatile noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) &noexcept>
+struct _not_qualifying_this<R(Args...) & noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) const &noexcept>
+struct _not_qualifying_this<R(Args...) const & noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) volatile &noexcept>
+struct _not_qualifying_this<R(Args...) volatile & noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) const volatile &noexcept>
+struct _not_qualifying_this<R(Args...) const volatile & noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) &&noexcept>
+struct _not_qualifying_this<R(Args...) && noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) const &&noexcept>
+struct _not_qualifying_this<R(Args...) const && noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) volatile &&noexcept>
+struct _not_qualifying_this<R(Args...) volatile && noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
 template<class R, class... Args>
-struct _not_qualifying_this<R(Args...) const volatile &&noexcept>
+struct _not_qualifying_this<R(Args...) const volatile && noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
