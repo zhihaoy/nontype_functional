@@ -92,6 +92,44 @@ struct _full_fn_sig<R(Args...) const && noexcept>
     : _ref_quals_fn_sig<R(Args...) const &&>, _noex_traits<true>
 {};
 
+struct _move_only_pointer
+{
+    union value_type
+    {
+        void *p_ = nullptr;
+        void const *cp_;
+        void (*fp_)();
+    } val;
+
+    _move_only_pointer() = default;
+    _move_only_pointer(_move_only_pointer const &) = delete;
+    _move_only_pointer &operator=(_move_only_pointer const &) = delete;
+
+    _move_only_pointer(_move_only_pointer &&other) noexcept
+        : val(std::exchange(other.val, {}))
+    {}
+
+    _move_only_pointer &operator=(_move_only_pointer &&other) noexcept
+    {
+        val = std::exchange(other.val, {});
+        return *this;
+    }
+};
+
+template<bool noex, class R, class... Args> struct _callable_trait
+{
+    typedef R call_t(_move_only_pointer::value_type, Args...) noexcept(noex);
+    typedef void destroy_t(_move_only_pointer::value_type) noexcept;
+
+    struct vtable
+    {
+        call_t *call = 0;
+        destroy_t *destroy = 0;
+    };
+
+    static inline constinit vtable abstract_base;
+};
+
 template<class S, class = typename _full_fn_sig<S>::function>
 class move_only_function;
 
@@ -122,50 +160,11 @@ class move_only_function<S, R(Args...)>
     static constexpr bool is_callable_from =
         is_invocable_using<cvref<VT>> and is_invocable_using<inv_quals<VT>>;
 
-    struct pointer
-    {
-        union value_type
-        {
-            void *p_ = nullptr;
-            void const *cp_;
-            void (*fp_)();
-        } val;
+    using trait = _callable_trait<noex, R, _param_t<Args>...>;
+    using vtable = trait::vtable;
 
-        pointer() = default;
-        pointer(pointer const &) = delete;
-        pointer &operator=(pointer const &) = delete;
-
-        pointer(pointer &&other) noexcept : val(std::exchange(other.val, {})) {}
-
-        pointer &operator=(pointer &&other) noexcept
-        {
-            val = std::exchange(other.val, {});
-        }
-
-        template<class T> constexpr auto get() const noexcept
-        {
-            if constexpr (std::is_const_v<T>)
-                return static_cast<T *>(val.cp_);
-            else if constexpr (std::is_object_v<T>)
-                return static_cast<T *>(val.p_);
-            else
-                return reinterpret_cast<T *>(val.fp_);
-        }
-    };
-
-    struct vtable
-    {
-        typedef R call_t(pointer::value_type, _param_t<Args>...) noexcept(noex);
-        typedef void destroy_t(pointer::value_type) noexcept;
-
-        call_t *call = 0;
-        destroy_t *destroy = [](auto) noexcept {};
-    };
-
-    static inline constinit vtable abstract_base;
-
-    std::reference_wrapper<vtable const> vtbl_ = abstract_base;
-    pointer obj_;
+    std::reference_wrapper<vtable const> vtbl_ = trait::abstract_base;
+    _move_only_pointer obj_;
 
   public:
     using result_type = R;
@@ -183,11 +182,15 @@ class move_only_function<S, R(Args...)>
         lhs.swap(rhs);
     }
 
-    ~move_only_function() { vtbl_.get().destroy(obj_.val); }
+    ~move_only_function()
+    {
+        if (auto destroy = vtbl_.get().destroy)
+            destroy(obj_.val);
+    }
 
     explicit operator bool() const noexcept
     {
-        return &vtbl_.get() != &abstract_base;
+        return &vtbl_.get() != &trait::abstract_base;
     }
 
     friend bool operator==(move_only_function const &f, std::nullptr_t) noexcept
