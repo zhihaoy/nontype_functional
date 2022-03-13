@@ -144,10 +144,9 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
                 { return std23::invoke_r<R>(F, std::forward<Args>(args)...); })
     {}
 
-    template<auto F, class U, class T = std::remove_reference_t<U>>
-    function_ref(nontype_t<F>, U &&obj) noexcept
-        requires std::is_lvalue_reference_v<U> and
-                     is_invocable_using<decltype(F), cvref<T>>
+    template<auto F, class T>
+    function_ref(nontype_t<F>, T &obj) noexcept
+        requires is_invocable_using<decltype(F), cvref<T>>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
               {
