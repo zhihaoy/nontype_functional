@@ -116,19 +116,20 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     {}
 
     template<class F, class T = std::remove_reference_t<F>>
-    function_ref(F &&f) noexcept requires(_is_not_self<F, function_ref> and
-                                          not std::is_member_pointer_v<T> and
-                                          is_invocable_using<cvref<T>>)
-    : fptr_(
-          [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
-          {
-              cvref<T> obj = *get<T>(fn_);
-              if (std::is_void_v<R>)
-                  obj(std::forward<Args>(args)...);
-              else
-                  return obj(std::forward<Args>(args)...);
-          }),
-      obj_(std::addressof(f))
+    constexpr function_ref(F &&f) noexcept
+        requires(_is_not_self<F, function_ref> and
+                 not std::is_member_pointer_v<T> and
+                 is_invocable_using<cvref<T>>)
+        : fptr_(
+              [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
+              {
+                  cvref<T> obj = *get<T>(fn_);
+                  if (std::is_void_v<R>)
+                      obj(std::forward<Args>(args)...);
+                  else
+                      return obj(std::forward<Args>(args)...);
+              }),
+          obj_(std::addressof(f))
     {}
 
     template<class T>
@@ -145,7 +146,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     {}
 
     template<auto F, class T>
-    function_ref(nontype_t<F>, T &obj) noexcept
+    constexpr function_ref(nontype_t<F>, T &obj) noexcept
         requires is_invocable_using<decltype(F), cvref<T>>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
@@ -158,7 +159,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     {}
 
     template<auto F, class T>
-    function_ref(nontype_t<F>, cv<T> *obj) noexcept
+    constexpr function_ref(nontype_t<F>, cv<T> *obj) noexcept
         requires is_invocable_using<decltype(F), decltype(obj)>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
