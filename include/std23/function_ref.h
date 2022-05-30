@@ -107,7 +107,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
         : fptr_(
               [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
               {
-                  if (std::is_void_v<R>)
+                  if constexpr (std::is_void_v<R>)
                       get<F>(fn_)(std::forward<Args>(args)...);
                   else
                       return get<F>(fn_)(std::forward<Args>(args)...);
@@ -124,7 +124,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
               [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
               {
                   cvref<T> obj = *get<T>(fn_);
-                  if (std::is_void_v<R>)
+                  if constexpr (std::is_void_v<R>)
                       obj(std::forward<Args>(args)...);
                   else
                       return obj(std::forward<Args>(args)...);
