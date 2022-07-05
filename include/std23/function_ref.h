@@ -108,9 +108,9 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
               [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
               {
                   if constexpr (std::is_void_v<R>)
-                      get<F>(fn_)(std::forward<Args>(args)...);
+                      get<F>(fn_)(static_cast<decltype(args)>(args)...);
                   else
-                      return get<F>(fn_)(std::forward<Args>(args)...);
+                      return get<F>(fn_)(static_cast<decltype(args)>(args)...);
               }),
           obj_(f)
     {}
@@ -125,9 +125,9 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
               {
                   cvref<T> obj = *get<T>(fn_);
                   if constexpr (std::is_void_v<R>)
-                      obj(std::forward<Args>(args)...);
+                      obj(static_cast<decltype(args)>(args)...);
                   else
-                      return obj(std::forward<Args>(args)...);
+                      return obj(static_cast<decltype(args)>(args)...);
               }),
           obj_(std::addressof(f))
     {}
@@ -141,8 +141,11 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     template<auto F>
     constexpr function_ref(nontype_t<F>) noexcept
         requires is_invocable_using<decltype(F)>
-        : fptr_([](storage, _param_t<Args>... args) noexcept(noex)
-                { return std23::invoke_r<R>(F, std::forward<Args>(args)...); })
+        : fptr_(
+              [](storage, _param_t<Args>... args) noexcept(noex) {
+                  return std23::invoke_r<R>(
+                      F, static_cast<decltype(args)>(args)...);
+              })
     {}
 
     template<auto F, class T>
@@ -152,8 +155,8 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
               [](storage this_, _param_t<Args>... args) noexcept(noex)
               {
                   cvref<T> obj = *get<T>(this_);
-                  return std23::invoke_r<R>(F, obj,
-                                            std::forward<Args>(args)...);
+                  return std23::invoke_r<R>(
+                      F, obj, static_cast<decltype(args)>(args)...);
               }),
           obj_(std::addressof(obj))
     {}
@@ -164,8 +167,9 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
               {
-                  return std23::invoke_r<R>(F, get<cv<T>>(this_),
-                                            std::forward<Args>(args)...);
+                  return std23::invoke_r<R>(
+                      F, get<cv<T>>(this_),
+                      static_cast<decltype(args)>(args)...);
               }),
           obj_(obj)
     {}
