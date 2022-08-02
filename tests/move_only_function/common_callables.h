@@ -16,5 +16,25 @@ using std23::nontype_t;
 #define BODYN(n) ((::boost::ut::log << __PRETTY_FUNCTION__ << '\n'), n)
 #endif
 
+template<auto N> struct int_c : detail::op
+{
+    using value_type = decltype(N);
+    static constexpr auto value = N;
+
+    [[nodiscard]] constexpr operator value_type() const { return N; }
+    [[nodiscard]] constexpr auto get() const { return N; }
+};
+
+inline constexpr int_c<0> free_function;
+inline constexpr int_c<1> function_template;
+inline constexpr int_c<2> empty;
+inline constexpr int_c<3> const_;
+inline constexpr int_c<4> lref;
+inline constexpr int_c<5> const_lref;
+inline constexpr int_c<6> rref;
+inline constexpr int_c<7> const_rref;
+
+template<char V> inline constexpr int_c<V> ch;
+
 int f();
 int f_good() noexcept;

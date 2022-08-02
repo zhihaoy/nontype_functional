@@ -4,6 +4,7 @@ target_sources(run-move_only_function PRIVATE
  "test_basics.cpp"
  "common_callables.h"
  "common_callables.cpp"
+ "test_cvref.cpp"
 )
 target_link_libraries(run-move_only_function PRIVATE nontype_functional kris-ut)
 set_target_properties(run-move_only_function PROPERTIES OUTPUT_NAME run)
