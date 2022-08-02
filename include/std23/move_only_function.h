@@ -205,7 +205,8 @@ template<bool noex, class R, class... Args> struct _callable_trait
             }
             else
             {
-                return std23::invoke_r<R>(static_cast<quals<T>>(*get<T>(this_)),
+                using Fp = quals<T>::type;
+                return std23::invoke_r<R>(static_cast<Fp>(*get<T>(this_)),
                                           std::forward<Args>(args)...);
             }
         },
@@ -247,8 +248,10 @@ class move_only_function<S, R(Args...)>
 
     template<class T> using cvref = ref<cv<T>>;
     template<class T>
-    using inv_quals =
-        std::conditional_t<is_lvalue_only or is_rvalue_only, cvref<T>, cv<T> &>;
+    struct inv_quals_f
+        : std::conditional<is_lvalue_only or is_rvalue_only, cvref<T>, cv<T> &>
+    {};
+    template<class T> using inv_quals = inv_quals_f<T>::type;
 
     template<class... T>
     static constexpr bool is_invocable_using =
@@ -288,7 +291,7 @@ class move_only_function<S, R(Args...)>
         }
 
         vtbl_ = trait::template callable_target<std::unwrap_ref_decay_t<F>,
-                                                inv_quals>;
+                                                inv_quals_f>;
         obj_ = std23::_take_reference(std::forward<F>(f));
     }
 
