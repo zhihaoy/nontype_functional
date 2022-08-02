@@ -143,7 +143,7 @@ template<class R, class... Args> struct _copyable_function
     {
         R operator()(Args... args) const override
         {
-            return std23::invoke_r<R>(f, std::forward<Args>(args)...);
+            return std23::invoke_r<R>(f, static_cast<Args>(args)...);
         }
     };
 
@@ -162,7 +162,7 @@ template<class R, class... Args> struct _copyable_function
 
         R operator()(Args... args) const override
         {
-            return std23::invoke_r<R>(this->get(), std::forward<Args>(args)...);
+            return std23::invoke_r<R>(this->get(), static_cast<Args>(args)...);
         }
     };
 
@@ -183,7 +183,7 @@ template<class R, class... Args> struct _copyable_function
         R operator()(Args... args) const override
         {
             return std23::invoke_r<R>(f, this->get(),
-                                      std::forward<Args>(args)...);
+                                      static_cast<Args>(args)...);
         }
     };
 };

@@ -201,13 +201,13 @@ template<bool noex, class R, class... Args> struct _callable_trait
             {
                 using Tp = std::remove_reference_t<std::remove_pointer_t<T>>;
                 return std23::invoke_r<R>(*get<Tp>(this_),
-                                          std::forward<Args>(args)...);
+                                          static_cast<Args>(args)...);
             }
             else
             {
                 using Fp = quals<T>::type;
                 return std23::invoke_r<R>(static_cast<Fp>(*get<T>(this_)),
-                                          std::forward<Args>(args)...);
+                                          static_cast<Args>(args)...);
             }
         },
         .destroy =
