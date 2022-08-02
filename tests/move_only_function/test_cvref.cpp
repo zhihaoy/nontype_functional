@@ -62,7 +62,15 @@ suite cvref = []
         [call = [](move_only_function<int(T)> f) { return f(nullptr); }]
     {
         given("a callable object with unqual call operator") = [=]
-        { expect(call(UnspecificValueCategory{}) == empty); };
+        {
+            expect(call(UnspecificValueCategory{}) == empty);
+
+            then("reference_wrapper can call it without moving") = [=]
+            {
+                UnspecificValueCategory fn;
+                expect(call(std::reference_wrapper(fn)) == empty);
+            };
+        };
 
         given("a callable object with value-category-aware call operators") =
             [=]
@@ -83,6 +91,13 @@ suite cvref = []
                            empty);
                 };
             };
+
+            then("reference_wrapper can call either const or non-const") = [=]
+            {
+                ImmutableCall<UnspecificValueCategory> fn;
+                expect(call(std::ref(fn)) == empty);
+                expect(call(std::cref(fn)) == const_);
+            };
         };
     };
 
@@ -91,7 +106,16 @@ suite cvref = []
          { return f(nullptr); }]
     {
         given("a callable object with const call operator") = [=]
-        { expect(call(ImmutableCall<UnspecificValueCategory>{}) == const_); };
+        {
+            expect(call(ImmutableCall<UnspecificValueCategory>{}) == const_);
+
+            then("reference_wrapper is unaffected by the qualifier") = [=]
+            {
+                ImmutableCall<UnspecificValueCategory> fn;
+                expect(call(std::ref(fn)) == empty);
+                expect(call(std::cref(fn)) == const_);
+            };
+        };
 
         given("a callable object with value-category-aware call operators") =
             [=]
@@ -105,6 +129,15 @@ suite cvref = []
         static_assert(
             not std::is_invocable_v<decltype(call), UnspecificValueCategory>,
             "unqual signature is non-const-only");
+
+        given("a callable object with unqual call operator") = [=]
+        {
+            then("reference_wrapper can make it const-invocable by lying") = [=]
+            {
+                UnspecificValueCategory fn;
+                expect(call(std::reference_wrapper(fn)) == empty);
+            };
+        };
     };
 
     feature("&-qualified") =
@@ -152,6 +185,12 @@ suite cvref = []
         {
             then("the object is called only as an rvalue") = [=]
             { expect(call(EitherValueCategory{}) == rref); };
+
+            then("reference_wrapper calls it only as an lvalue") = [=]
+            {
+                EitherValueCategory fn;
+                expect(call(std::reference_wrapper(fn)) == lref);
+            };
         };
 
         static_assert(not std::is_invocable_v<decltype(call), LvalueOnly>,
@@ -213,6 +252,13 @@ suite cvref = []
             then("the object is called only as an rvalue") = [=] {
                 expect(call(ImmutableCall<EitherValueCategory>{}) ==
                        const_rref);
+            };
+
+            then("reference_wrapper calls it only as an lvalue") = [=]
+            {
+                ImmutableCall<EitherValueCategory> fn;
+                expect(call(std::ref(fn)) == lref);
+                expect(call(std::cref(fn)) == const_lref);
             };
         };
 
