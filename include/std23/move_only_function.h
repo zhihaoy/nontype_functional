@@ -295,6 +295,9 @@ class move_only_function<S, R(Args...)>
         obj_ = std23::_take_reference(std::forward<F>(f));
     }
 
+    move_only_function(move_only_function &&) = default;
+    move_only_function &operator=(move_only_function &&) = default;
+
     void swap(move_only_function &other) noexcept
     {
         std::swap<move_only_function>(*this, other);
