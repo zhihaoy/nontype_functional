@@ -176,7 +176,7 @@ template<bool noex, class R, class... Args> struct _callable_trait
     struct vtable
     {
         call_t *call = 0;
-        destroy_t *destroy = 0;
+        destroy_t *destroy = [](handle) noexcept {};
     };
 
     static inline constinit vtable abstract_base;
@@ -308,11 +308,7 @@ class move_only_function<S, R(Args...)>
         lhs.swap(rhs);
     }
 
-    ~move_only_function()
-    {
-        if (auto destroy = vtbl_.get().destroy)
-            destroy(obj_.val);
-    }
+    ~move_only_function() { vtbl_.get().destroy(obj_.val); }
 
     explicit operator bool() const noexcept
     {
