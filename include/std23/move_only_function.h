@@ -276,12 +276,12 @@ class move_only_function<S, R(Args...)>
     using result_type = R;
 
     move_only_function() = default;
-    move_only_function(std::nullptr_t) noexcept : move_only_function() {}
+    move_only_function(nullptr_t) noexcept : move_only_function() {}
 
     template<class F>
     move_only_function(F &&f)
         requires _is_not_self<F, move_only_function> and
-                 _does_not_specialize<F, std::in_place_type_t> and
+                 _does_not_specialize<F, in_place_type_t> and
                  is_callable_from<std::decay_t<F>> and is_viable_initializer<F>
     {
         if constexpr (_looks_nullable_to<F, move_only_function>)
@@ -315,7 +315,7 @@ class move_only_function<S, R(Args...)>
         return &vtbl_.get() != &trait::abstract_base;
     }
 
-    friend bool operator==(move_only_function const &f, std::nullptr_t) noexcept
+    friend bool operator==(move_only_function const &f, nullptr_t) noexcept
     {
         return !f;
     }

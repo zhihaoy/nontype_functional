@@ -14,6 +14,11 @@ template<auto V> struct nontype_t
 
 template<auto V> inline constexpr nontype_t<V> nontype{};
 
+using std::in_place_type;
+using std::in_place_type_t;
+using std::initializer_list;
+using std::nullptr_t;
+
 template<class R, class F, class... Args>
 requires std::is_invocable_r_v<R, F, Args...>
 constexpr R invoke_r(F &&f, Args &&...args) noexcept(

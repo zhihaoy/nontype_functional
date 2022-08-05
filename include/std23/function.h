@@ -255,7 +255,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     using result_type = R;
 
     function() noexcept { ::new (storage_location()) empty_target_object; }
-    function(std::nullptr_t) noexcept : function() {}
+    function(nullptr_t) noexcept : function() {}
 
     template<class F>
     function(F &&f) noexcept(
@@ -332,7 +332,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         return __builtin_memcmp(storage_, &null, sizeof(void *)) != 0;
     }
 
-    friend bool operator==(function const &f, std::nullptr_t) noexcept
+    friend bool operator==(function const &f, nullptr_t) noexcept
     {
         return !f;
     }
