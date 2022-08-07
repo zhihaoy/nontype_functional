@@ -108,6 +108,18 @@ constexpr auto _take_reference(std::reference_wrapper<T> rhs) noexcept
     return std::addressof(rhs.get());
 }
 
+template<class T>
+constexpr auto _build_reference = [](auto &&...args)
+{ return new T(decltype(args)(args)...); };
+
+template<class T>
+constexpr auto _build_reference<T *> = [](auto &&...args) noexcept -> T *
+{ return {decltype(args)(args)...}; };
+
+template<class T>
+constexpr auto _build_reference<std::reference_wrapper<T>> =
+    [](auto &rhs) noexcept { return std::addressof(rhs); };
+
 struct _move_only_pointer
 {
     union value_type
@@ -293,6 +305,28 @@ class move_only_function<S, R(Args...)>
         vtbl_ = trait::template callable_target<std::unwrap_ref_decay_t<F>,
                                                 inv_quals_f>;
         obj_ = std23::_take_reference(std::forward<F>(f));
+    }
+
+    template<class T, class... Inits>
+    explicit move_only_function(in_place_type_t<T>, Inits &&...inits)
+        requires is_callable_from<T> and std::is_constructible_v<T, Inits...>
+        : vtbl_(trait::template callable_target<std::unwrap_reference_t<T>,
+                                                inv_quals_f>),
+          obj_(_build_reference<T>(std::forward<Inits>(inits)...))
+    {
+        static_assert(std::is_same_v<std::decay_t<T>, T>);
+    }
+
+    template<class T, class U, class... Inits>
+    explicit move_only_function(in_place_type_t<T>, initializer_list<U> ilist,
+                                Inits &&...inits)
+        requires is_callable_from<T> and
+                     std::is_constructible_v<T, decltype((ilist)), Inits...>
+        : vtbl_(trait::template callable_target<std::unwrap_reference_t<T>,
+                                                inv_quals_f>),
+          obj_(_build_reference<T>(ilist, std::forward<Inits>(inits)...))
+    {
+        static_assert(std::is_same_v<std::decay_t<T>, T>);
     }
 
     move_only_function(move_only_function &&) = default;
