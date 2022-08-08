@@ -74,3 +74,17 @@ suite value_semantics = []
         };
     };
 };
+
+using T = move_only_function<void(int)>;
+using R = T::result_type;
+
+static_assert(std::is_nothrow_default_constructible_v<T>);
+static_assert(std::is_nothrow_constructible_v<T, std::nullptr_t>);
+static_assert(not std::is_copy_constructible_v<T>);
+static_assert(not std::is_copy_assignable_v<T>);
+static_assert(std::is_nothrow_assignable_v<T, std::nullptr_t>);
+static_assert(std::is_nothrow_move_constructible_v<T>);
+static_assert(std::is_nothrow_move_assignable_v<T>);
+static_assert(std::is_nothrow_swappable_v<T>);
+
+static_assert(std::is_same_v<std::invoke_result_t<T, char>, R>);

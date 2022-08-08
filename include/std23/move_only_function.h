@@ -92,21 +92,22 @@ struct _full_fn_sig<R(Args...) const && noexcept>
     : _ref_quals_fn_sig<R(Args...) const &&>, _noex_traits<true>
 {};
 
-constexpr auto _take_reference(auto &&rhs)
+constexpr inline struct
 {
-    return new auto(decltype(rhs)(rhs));
-}
+    constexpr auto operator()(auto &&rhs) const
+    {
+        return new auto(decltype(rhs)(rhs));
+    }
 
-constexpr auto _take_reference(auto *rhs) noexcept
-{
-    return rhs;
-}
+    constexpr auto operator()(auto *rhs) const noexcept { return rhs; }
 
-template<class T>
-constexpr auto _take_reference(std::reference_wrapper<T> rhs) noexcept
-{
-    return std::addressof(rhs.get());
-}
+    template<class T>
+    constexpr auto operator()(std::reference_wrapper<T> rhs) const noexcept
+    {
+        return std::addressof(rhs.get());
+    }
+
+} _take_reference;
 
 template<class T>
 constexpr auto _build_reference = [](auto &&...args)
@@ -291,7 +292,8 @@ class move_only_function<S, R(Args...)>
     move_only_function(nullptr_t) noexcept : move_only_function() {}
 
     template<class F>
-    move_only_function(F &&f)
+    move_only_function(F &&f) noexcept(
+        std::is_nothrow_invocable_v<decltype(_take_reference), F>)
         requires _is_not_self<F, move_only_function> and
                  _does_not_specialize<F, in_place_type_t> and
                  is_callable_from<std::decay_t<F>> and is_viable_initializer<F>
@@ -304,11 +306,12 @@ class move_only_function<S, R(Args...)>
 
         vtbl_ = trait::template callable_target<std::unwrap_ref_decay_t<F>,
                                                 inv_quals_f>;
-        obj_ = std23::_take_reference(std::forward<F>(f));
+        obj_ = _take_reference(std::forward<F>(f));
     }
 
     template<class T, class... Inits>
-    explicit move_only_function(in_place_type_t<T>, Inits &&...inits)
+    explicit move_only_function(in_place_type_t<T>, Inits &&...inits) noexcept(
+        std::is_nothrow_invocable_v<decltype(_build_reference<T>), Inits...>)
         requires is_callable_from<T> and std::is_constructible_v<T, Inits...>
         : vtbl_(trait::template callable_target<std::unwrap_reference_t<T>,
                                                 inv_quals_f>),
@@ -319,7 +322,9 @@ class move_only_function<S, R(Args...)>
 
     template<class T, class U, class... Inits>
     explicit move_only_function(in_place_type_t<T>, initializer_list<U> ilist,
-                                Inits &&...inits)
+                                Inits &&...inits) noexcept( //
+        std::is_nothrow_invocable_v<decltype(_build_reference<T>),
+                                    decltype((ilist)), Inits...>)
         requires is_callable_from<T> and
                      std::is_constructible_v<T, decltype((ilist)), Inits...>
         : vtbl_(trait::template callable_target<std::unwrap_reference_t<T>,

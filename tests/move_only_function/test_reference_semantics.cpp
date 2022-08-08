@@ -67,16 +67,44 @@ suite reference_semantics = []
 
                     expect(obj.n == 4_i);
                 };
+
+                using T = decltype(fn);
+                static_assert(not std::is_constructible_v<T, counter>,
+                              "counter's call op is not const");
+                static_assert(
+                    std::is_constructible_v<T, std::reference_wrapper<counter>>,
+                    "refwrap's call op is unconditionally const");
+                static_assert(not std::is_constructible_v<
+                                  T, std::reference_wrapper<counter const>>,
+                              "refwrap's call op is constrained");
             };
         };
     };
 };
 
-using T = move_only_function<void() const>;
-static_assert(not std::is_constructible_v<T, counter>,
-              "counter's call op is not const");
-static_assert(std::is_constructible_v<T, std::reference_wrapper<counter>>,
-              "refwrap's call op is unconditionally const");
+using T = move_only_function<void(int)>;
+using X = decltype([](int) {});
+
+static_assert(std::is_constructible_v<T, X>);
+static_assert(std::is_constructible_v<T, std::reference_wrapper<X>>);
+static_assert(std::is_assignable_v<T, X>);
+static_assert(std::is_constructible_v<T, std::reference_wrapper<X>>);
+
+static_assert(std::is_constructible_v<T, std::in_place_type_t<X>>);
+static_assert(std::is_constructible_v<
+              T, std::in_place_type_t<std::reference_wrapper<X>>, X &>);
+
+// extension
+static_assert(std::is_nothrow_constructible_v<T, std::reference_wrapper<X>>);
+static_assert(std::is_nothrow_assignable_v<T, std::reference_wrapper<X>>);
+static_assert(std::is_nothrow_constructible_v<T, void (&)(int)>);
+static_assert(std::is_nothrow_constructible_v<T, void (*)(int)>);
+static_assert(std::is_nothrow_assignable_v<T, void (&)(int)>);
+static_assert(std::is_nothrow_assignable_v<T, void (*)(int)>);
+
+static_assert(std::is_nothrow_constructible_v<
+              T, std::in_place_type_t<std::reference_wrapper<X>>, X &>);
+static_assert(std::is_nothrow_constructible_v<
+              T, std::in_place_type_t<void (*)(int)>, void(int)>);
 static_assert(
-    not std::is_constructible_v<T, std::reference_wrapper<counter const>>,
-    "refwrap's call op is constrained");
+    std::is_nothrow_constructible_v<T, std::in_place_type_t<void (*)(int)>, X>);
