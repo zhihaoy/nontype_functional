@@ -27,6 +27,33 @@ suite reference_semantics = []
 
                     expect(obj.n == 2_i);
                 };
+
+                given("a different stateful object") = [&]
+                {
+                    counter rhs;
+
+                    when("swapping with a different move_only_function that "
+                         "refers to it") = [&]
+                    {
+                        move_only_function<void()> fn2(
+                            std23::in_place_type<
+                                std::reference_wrapper<counter>>,
+                            rhs);
+                        swap(fn, fn2);
+
+                        then("their references are swapped") = [&]
+                        {
+                            expect(obj.n == 2_i);
+                            expect(rhs.n == 0_i);
+
+                            fn();
+                            expect(rhs.n == 1_i);
+
+                            fn2();
+                            expect(obj.n == 3_i);
+                        };
+                    };
+                };
             };
 
             when("initializes const-correct move_only_function") = [=]() mutable
