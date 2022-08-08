@@ -2,10 +2,10 @@
 
 int f()
 {
-    return BODYN(0);
+    return BODYN(free_function);
 }
 
 int f_good() noexcept
 {
-    return BODYN(1);
+    return BODYN(free_function);
 }

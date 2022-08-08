@@ -6,17 +6,17 @@ using T = std::unique_ptr<char>;
 
 struct UnspecificValueCategory : T
 {
-    int operator()(T) { return empty; }
+    int operator()(T) { return BODYN(empty); }
 };
 
 struct LvalueOnly : T
 {
-    int operator()(T) & { return lref; }
+    int operator()(T) & { return BODYN(lref); }
 };
 
 struct RvalueOnly : T
 {
-    int operator()(T) && { return rref; }
+    int operator()(T) && { return BODYN(rref); }
 };
 
 struct EitherValueCategory : LvalueOnly, RvalueOnly
@@ -31,19 +31,19 @@ template<>
 struct ImmutableCall<UnspecificValueCategory> : UnspecificValueCategory
 {
     using UnspecificValueCategory::operator();
-    int operator()(T) const { return const_; }
+    int operator()(T) const { return BODYN(const_); }
 };
 
 template<> struct ImmutableCall<LvalueOnly> : LvalueOnly
 {
     using LvalueOnly::operator();
-    int operator()(T) const & { return const_lref; }
+    int operator()(T) const & { return BODYN(const_lref); }
 };
 
 template<> struct ImmutableCall<RvalueOnly> : RvalueOnly
 {
     using RvalueOnly::operator();
-    int operator()(T) const && { return const_rref; }
+    int operator()(T) const && { return BODYN(const_rref); }
 };
 
 template<>
