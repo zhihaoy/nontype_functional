@@ -5,7 +5,7 @@
 [![CMake](https://github.com/zhihaoy/nontype_functional/actions/workflows/cmake.yml/badge.svg)](https://github.com/zhihaoy/nontype_functional/actions/workflows/cmake.yml)
 
 
-Provide complete implementation of `std::function`, `std::function_ref`, and `std::move_only_function`<sup>(coming)</sup> equivalent to those in the C++23 `<functional>` header.
+Provide complete implementation of `std::function`, `std::function_ref`, and `std::move_only_function` equivalent to those in the C++23 `<functional>` header.
 
 ## Highlights
 
@@ -102,7 +102,7 @@ Feels like creating a member function for `FILE` on the fly, isn't it?
 ## Roadmap
 
 - [x] 0.8 – `std::function_ref` & `std::function`
-- [ ] 0.9 – `std::move_only_function`
+- [x] 0.9 – `std::move_only_function`
 - [ ] 1.0 – `nontype_t` constructors for `move_only_function`
 - [ ] 1.1 – Support C++20 modules
 
