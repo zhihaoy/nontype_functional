@@ -5,7 +5,17 @@ int f()
     return BODYN(free_function);
 }
 
-int f_good() noexcept
+int A::g()
+{
+    return BODYN('g');
+}
+
+int A::k() const
+{
+    return BODYN('k');
+}
+
+int h(A)
 {
     return BODYN(free_function);
 }

@@ -21,7 +21,7 @@ template<auto N> struct int_c : detail::op
     using value_type = decltype(N);
     static constexpr auto value = N;
 
-    [[nodiscard]] constexpr operator value_type() const { return N; }
+    [[nodiscard]] constexpr operator value_type() const noexcept { return N; }
     [[nodiscard]] constexpr auto get() const { return N; }
 };
 
@@ -33,8 +33,18 @@ inline constexpr int_c<4> lref;
 inline constexpr int_c<5> const_lref;
 inline constexpr int_c<6> rref;
 inline constexpr int_c<7> const_rref;
+inline constexpr int_c<8> noexcept_;
 
 template<char V> inline constexpr int_c<V> ch;
 
 int f();
-int f_good() noexcept;
+
+struct A
+{
+    int g();
+    int k() const;
+
+    int data = 99;
+};
+
+int h(A);
