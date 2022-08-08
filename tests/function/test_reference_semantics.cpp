@@ -9,7 +9,7 @@ suite reference_semantics = []
         struct counter
         {
             int n = 0;
-            int operator()() { return ++n; };
+            int operator()() { return ++n; }
         };
 
         given("a stateful callable object") = []
