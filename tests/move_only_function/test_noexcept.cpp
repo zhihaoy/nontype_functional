@@ -17,10 +17,15 @@ int f_good() noexcept
     return BODYN(free_function);
 }
 
-struct A_good : A
+struct A_good
 {
     int g() noexcept { return BODYN('g'); }
 };
+
+int h_good(A) noexcept
+{
+    return BODYN('h');
+}
 
 suite noexcept_qualified = []
 {
@@ -35,6 +40,43 @@ suite noexcept_qualified = []
         {
             expect(nothrow_call([]() noexcept { return BODYN(noexcept_); }) ==
                    noexcept_);
+        };
+
+        given("a noexcept structual callable") = []
+        { expect(nothrow_call(nontype<f_good>) == free_function); };
+    };
+
+    feature("noexcept signature allows binding nothrow nttp") = []
+    {
+        given("an object without operator()") = []
+        {
+            A_good x;
+
+            when("binding by name") = [&] {
+                expect(nothrow_call({nontype<&A_good::g>, x}) == ch<'g'>);
+            };
+
+            when("binding by pointer") = [&] {
+                expect(nothrow_call({nontype<&A_good::g>, &x}) == ch<'g'>);
+            };
+
+            when("binding by reference_wrapper") = [&] {
+                expect(nothrow_call({nontype<&A_good::g>, std::ref(x)}) ==
+                       ch<'g'>);
+            };
+        };
+
+        given("an object without a noexcept member function") = []
+        {
+            A a;
+
+            then("you can treat member access as a nothrow call") = [&] {
+                expect(nothrow_call({nontype<&A::data>, a}) == 99_i);
+            };
+
+            then("you can treat a noexcept free function as its memfn") = [&] {
+                expect(nothrow_call({nontype<h_good>, a}) == ch<'h'>);
+            };
         };
     };
 
@@ -72,3 +114,17 @@ static_assert(not std::is_constructible_v<Y, decltype(&A::g)>);
 static_assert(std::is_constructible_v<Yp, decltype(&A_good::g)>);
 static_assert(std::is_constructible_v<Y, decltype(&A::data)>,
               "pointer-to-data-member is deemed noexcept");
+
+using T = move_only_function<int()>;
+using U = move_only_function<int() noexcept>;
+
+static_assert(std::is_constructible_v<T, nontype_t<&A::g>, A>);
+static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A>,
+              "member function may throw");
+static_assert(std::is_constructible_v<T, nontype_t<&A_good::g>, A_good>);
+static_assert(std::is_constructible_v<U, nontype_t<&A_good::g>, A_good>);
+static_assert(std::is_constructible_v<T, nontype_t<h>, A>);
+static_assert(not std::is_constructible_v<U, nontype_t<h>, A>,
+              "explicit member function may throw");
+static_assert(std::is_constructible_v<T, nontype_t<h_good>, A>);
+static_assert(std::is_constructible_v<U, nontype_t<h_good>, A>);

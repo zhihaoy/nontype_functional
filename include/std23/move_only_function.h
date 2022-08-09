@@ -231,6 +231,45 @@ template<bool noex, class R, class... Args> struct _callable_trait
                 delete get<T>(this_);
         },
     };
+
+    template<auto f>
+    static inline constinit vtable unbound_callable_target{
+        .call = [](handle, Args... args) noexcept(noex)
+        { return std23::invoke_r<R>(f, static_cast<Args>(args)...); },
+    };
+
+    template<auto f, class T, template<class> class quals>
+    static inline constinit vtable bound_callable_target{
+        .call =
+            [](handle this_, Args... args) noexcept(noex)
+        {
+            if constexpr (std::is_pointer_v<T>)
+            {
+                using Tp = std::remove_pointer_t<T>;
+                return std23::invoke_r<R>(f, get<Tp>(this_),
+                                          static_cast<Args>(args)...);
+            }
+            else if constexpr (std::is_lvalue_reference_v<T>)
+            {
+                using Tp = std::remove_reference_t<T>;
+                return std23::invoke_r<R>(f, *get<Tp>(this_),
+                                          static_cast<Args>(args)...);
+            }
+            else
+            {
+                using Fp = quals<T>::type;
+                return std23::invoke_r<R>(f, static_cast<Fp>(*get<T>(this_)),
+                                          static_cast<Args>(args)...);
+            }
+        },
+        .destroy =
+            [](handle this_) noexcept
+        {
+            if constexpr (not std::is_lvalue_reference_v<T> and
+                          not std::is_pointer_v<T>)
+                delete get<T>(this_);
+        },
+    };
 };
 
 template<class T, template<class...> class Primary>
@@ -275,9 +314,9 @@ class move_only_function<S, R(Args...)>
     static constexpr bool is_callable_from =
         is_invocable_using<cvref<VT>> and is_invocable_using<inv_quals<VT>>;
 
-    template<class F, class FD = std::decay_t<F>>
-    static bool constexpr is_viable_initializer =
-        std::is_constructible_v<FD, F>;
+    template<auto f, class VT>
+    static constexpr bool is_callable_as_if_from =
+        is_invocable_using<decltype(f), inv_quals<VT>>;
 
     using trait = _callable_trait<noex, R, _param_t<Args>...>;
     using vtable = trait::vtable;
@@ -291,12 +330,12 @@ class move_only_function<S, R(Args...)>
     move_only_function() = default;
     move_only_function(nullptr_t) noexcept : move_only_function() {}
 
-    template<class F>
+    template<class F, class VT = std::decay_t<F>>
     move_only_function(F &&f) noexcept(
         std::is_nothrow_invocable_v<decltype(_take_reference), F>)
         requires _is_not_self<F, move_only_function> and
                  _does_not_specialize<F, in_place_type_t> and
-                 is_callable_from<std::decay_t<F>> and is_viable_initializer<F>
+                 is_callable_from<VT> and std::is_constructible_v<VT, F>
     {
         if constexpr (_looks_nullable_to<F, move_only_function>)
         {
@@ -308,6 +347,22 @@ class move_only_function<S, R(Args...)>
                                                 inv_quals_f>;
         obj_ = _take_reference(std::forward<F>(f));
     }
+
+    template<auto f>
+    move_only_function(nontype_t<f>) noexcept
+        requires is_invocable_using<decltype(f)>
+        : vtbl_(trait::template unbound_callable_target<f>)
+    {}
+
+    template<auto f, class T, class VT = std::decay_t<T>>
+    move_only_function(nontype_t<f>, T &&x) noexcept(
+        std::is_nothrow_invocable_v<decltype(_take_reference), T>)
+        requires is_callable_as_if_from<f, VT> and
+                     std::is_constructible_v<VT, T>
+        : vtbl_(trait::template bound_callable_target<
+                f, std::unwrap_ref_decay_t<T>, inv_quals_f>),
+          obj_(_take_reference(std::forward<T>(x)))
+    {}
 
     template<class T, class... Inits>
     explicit move_only_function(in_place_type_t<T>, Inits &&...inits) noexcept(
@@ -329,6 +384,34 @@ class move_only_function<S, R(Args...)>
                      std::is_constructible_v<T, decltype((ilist)), Inits...>
         : vtbl_(trait::template callable_target<std::unwrap_reference_t<T>,
                                                 inv_quals_f>),
+          obj_(_build_reference<T>(ilist, std::forward<Inits>(inits)...))
+    {
+        static_assert(std::is_same_v<std::decay_t<T>, T>);
+    }
+
+    template<auto f, class T, class... Inits>
+    explicit move_only_function(nontype_t<f>, in_place_type_t<T>,
+                                Inits &&...inits) noexcept( //
+        std::is_nothrow_invocable_v<decltype(_build_reference<T>), Inits...>)
+        requires is_callable_as_if_from<f, T> and
+                     std::is_constructible_v<T, Inits...>
+        : vtbl_(trait::template bound_callable_target<
+                f, std::unwrap_reference_t<T>, inv_quals_f>),
+          obj_(_build_reference<T>(std::forward<Inits>(inits)...))
+    {
+        static_assert(std::is_same_v<std::decay_t<T>, T>);
+    }
+
+    template<auto f, class T, class U, class... Inits>
+    explicit move_only_function(nontype_t<f>, in_place_type_t<T>,
+                                initializer_list<U> ilist,
+                                Inits &&...inits) noexcept( //
+        std::is_nothrow_invocable_v<decltype(_build_reference<T>),
+                                    decltype((ilist)), Inits...>)
+        requires is_callable_as_if_from<f, T> and
+                     std::is_constructible_v<T, decltype((ilist)), Inits...>
+        : vtbl_(trait::template bound_callable_target<
+                f, std::unwrap_reference_t<T>, inv_quals_f>),
           obj_(_build_reference<T>(ilist, std::forward<Inits>(inits)...))
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);

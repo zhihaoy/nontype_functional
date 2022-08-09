@@ -54,9 +54,20 @@ struct ImmutableCall<EitherValueCategory> : ImmutableCall<LvalueOnly>,
     using ImmutableCall<RvalueOnly>::operator();
 };
 
+struct NoCall
+{
+    int unspecific_value_category(T) { return BODYN('k'); }
+    int lvalue_only(T) & { return BODYN('k'); }
+    int rvalue_only(T) && { return BODYN('k'); }
+    int immutable(T) const { return BODYN('k'); }
+    int immutable_lvalue_only(T) const & { return BODYN('k'); }
+    int immutable_rvalue_only(T) const && { return BODYN('k'); }
+};
+
 suite cvref = []
 {
     using namespace bdd;
+    using type_traits::is_valid;
 
     feature("empty cv-ref qualifier") =
         [call = [](move_only_function<int(T)> f) { return f(nullptr); }]
@@ -84,12 +95,8 @@ suite cvref = []
 
         given("an immutable callable object") = [=]
         {
-            then("the object is called only as a copy") = [=]
-            {
-                {
-                    expect(call(ImmutableCall<UnspecificValueCategory>{}) ==
-                           empty);
-                };
+            then("the object is called only as a copy") = [=] {
+                expect(call(ImmutableCall<UnspecificValueCategory>{}) == empty);
             };
 
             then("reference_wrapper can call either const or non-const") = [=]
@@ -98,6 +105,22 @@ suite cvref = []
                 expect(call(std::ref(fn)) == empty);
                 expect(call(std::cref(fn)) == const_);
             };
+        };
+
+        given("an object without operator()") = [=]
+        {
+            NoCall a;
+
+            then("a member function may be used in place of operator()") =
+                [&](auto t)
+            {
+                expect(call({t, a}) == ch<'k'>) << "by name";
+                expect(call({t, &a}) == ch<'k'>) << "by pointer";
+                expect(call({t, std::ref(a)}) == ch<'k'>) << "by refwrap";
+            } | std::tuple(nontype<&NoCall::unspecific_value_category>,
+                           nontype<&NoCall::immutable>,
+                           nontype<&NoCall::lvalue_only>,
+                           nontype<&NoCall::immutable_lvalue_only>);
         };
     };
 
@@ -138,6 +161,20 @@ suite cvref = []
                 expect(call(std::reference_wrapper(fn)) == empty);
             };
         };
+
+        given("an object without operator()") = [=]
+        {
+            NoCall a;
+
+            then("a member function may be used in place of operator()") =
+                [=](auto t)
+            {
+                expect(call({t, a}) == ch<'k'>) << "by name";
+                expect(call({t, &a}) == ch<'k'>) << "by pointer";
+                expect(call({t, std::ref(a)}) == ch<'k'>) << "by refwrap";
+            } | std::tuple(nontype<&NoCall::immutable>,
+                           nontype<&NoCall::immutable_lvalue_only>);
+        };
     };
 
     feature("&-qualified") =
@@ -161,12 +198,8 @@ suite cvref = []
 
         given("an immutable callable object") = [=]
         {
-            then("the object is called only as a copy") = [=]
-            {
-                {
-                    expect(call(ImmutableCall<UnspecificValueCategory>{}) ==
-                           empty);
-                };
+            then("the object is called only as a copy") = [=] {
+                expect(call(ImmutableCall<UnspecificValueCategory>{}) == empty);
             };
         };
     };
@@ -198,13 +231,25 @@ suite cvref = []
 
         given("an immutable callable object") = [=]
         {
-            then("the object is called only as a copy") = [=]
-            {
-                {
-                    expect(call(ImmutableCall<UnspecificValueCategory>{}) ==
-                           empty);
-                };
+            then("the object is called only as a copy") = [=] {
+                expect(call(ImmutableCall<UnspecificValueCategory>{}) == empty);
             };
+        };
+
+        given("an object without operator()") = [=]
+        {
+            NoCall a;
+
+            then("a member function may be used in place of operator()") =
+                [&](auto t)
+            {
+                expect(call({t, a}) == ch<'k'>) << "by name";
+
+                static_assert(
+                    not is_valid<T>([&](auto t) -> decltype(call({t, &a})) {}),
+                    "calling pointer-to-object works as if dereferenced");
+            } | std::tuple(nontype<&NoCall::rvalue_only>,
+                           nontype<&NoCall::immutable_rvalue_only>);
         };
     };
 

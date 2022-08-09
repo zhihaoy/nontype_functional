@@ -177,8 +177,6 @@ suite nttp_callable = []
     };
 };
 
-using std23::nontype_t;
-
 using T = function<int(int)>;
 
 static_assert(std::is_constructible_v<T, nontype_t<&A::add>, A>);
