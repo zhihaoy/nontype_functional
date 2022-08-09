@@ -35,10 +35,16 @@ class NotDefaultConstructible : public NotMovable
 
 using T = move_only_function<void(int, std::string &)>;
 
+struct copy_init
+{
+    void operator()(T);
+};
+
 suite inplace = []
 {
     using std23::in_place_type;
     using namespace bdd;
+    using type_traits::is_valid;
 
     feature("move_only_function does not require callable to be movable") = []
     {
@@ -66,6 +72,15 @@ suite inplace = []
                     expect(s == "-1"sv);
                 };
             };
+
+            then("you may not in-place construct a function parameter") = []
+            {
+                static_assert(
+                    not is_valid<copy_init>(
+                        [](auto f) -> decltype(f(in_place_type<NotMovable>)) {
+                        }),
+                    "not a converting constructor");
+            };
         };
     };
 
@@ -82,21 +97,39 @@ suite inplace = []
 
                 expect(s == "6"sv);
             };
+
+            then("you may not in-place construct a function parameter") = []
+            {
+                static_assert(
+                    not is_valid<copy_init>(
+                        [](auto f) -> decltype(f(
+                                       {in_place_type<NotDefaultConstructible>,
+                                        3, 2})) {}),
+                    "does not convert from braced-init-list");
+            };
         };
 
         given("a target type with a initializer_list ctor") = []
         {
-            auto ls = {3, 1, 5, 4};
             std::allocator<int> a;
-            T fn(in_place_type<NotDefaultConstructible>, ls, a);
+            T fn(in_place_type<NotDefaultConstructible>, {3, 1, 5, 4}, a);
 
-            then("the ctor may be requested without deducing from "
-                 "braced-init-list") = [&]
+            then("the ctor may be requested by passing braced-init-list") = [&]
             {
                 std::string s;
                 fn(0, s);
 
                 expect(s == "13"sv);
+            };
+
+            then("you may not in-place construct a function parameter") = [&]
+            {
+                static_assert(
+                    not is_valid<copy_init>(
+                        [](auto f) -> decltype(f(
+                                       {in_place_type<NotDefaultConstructible>,
+                                        {3, 1, 5, 4}})) {}),
+                    "does not convert from braced-init-list");
             };
         };
     };
