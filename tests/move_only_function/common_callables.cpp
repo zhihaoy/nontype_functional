@@ -7,12 +7,7 @@ int f()
 
 int A::g()
 {
-    return BODYN('g');
-}
-
-int A::k() const
-{
-    return BODYN('k');
+    return BODYN(empty);
 }
 
 int h(A)

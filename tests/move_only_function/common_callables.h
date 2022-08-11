@@ -42,7 +42,6 @@ int f();
 struct A
 {
     int g();
-    int k() const;
 
     int data = 99;
 };
