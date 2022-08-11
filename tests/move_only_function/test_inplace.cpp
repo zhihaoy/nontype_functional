@@ -132,6 +132,29 @@ suite inplace = []
                     "does not convert from braced-init-list");
             };
         };
+
+        feature("in-place construct types without operator()") = []
+        {
+            given("a type with user-defined ctors") = []
+            {
+                move_only_function<std::string()> fn(
+                    nontype<[](std::vector<double> &v)
+                            { return std::to_string(v.size()); }>,
+                    in_place_type<std::vector<double>>, 4);
+
+                then("in-place construct") = [&] { expect(fn() == "4"sv); };
+            };
+
+            given("a type with a initializer_list ctor") = []
+            {
+                move_only_function<int()> fn(
+                    nontype<[](std::string const &s) { return std::stoi(s); }>,
+                    in_place_type<std::string>, {'5', '9', '2', '\0'});
+
+                then("passing braced-init-list") = [&]
+                { expect(fn() == 592_i); };
+            };
+        };
     };
 };
 
