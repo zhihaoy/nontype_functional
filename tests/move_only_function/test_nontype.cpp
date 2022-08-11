@@ -78,3 +78,22 @@ suite nttp_callable = []
         };
     };
 };
+
+using U = move_only_function<int(A)>;
+
+static_assert(std::is_nothrow_constructible_v<U, nontype_t<&A::data>>);
+static_assert(std::is_nothrow_constructible_v<U, nontype_t<h>>,
+              "unbounded cases are always noexcept");
+static_assert(std::is_nothrow_assignable_v<U, nontype_t<&A::data>>);
+static_assert(std::is_nothrow_assignable_v<U, nontype_t<h>>);
+
+static_assert(std::is_constructible_v<T, nontype_t<&A::data>, A>);
+static_assert(std::is_constructible_v<T, nontype_t<h>, A>,
+              "initializing bounded objects potentially throws");
+
+// extension
+static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::data>, A *>,
+              "...unless we stored a pointer");
+static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::data>,
+                                              std::reference_wrapper<A>>,
+              "...or reference_wrapper");

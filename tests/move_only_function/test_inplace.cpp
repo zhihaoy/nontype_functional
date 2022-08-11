@@ -164,3 +164,14 @@ static_assert(not std::is_constructible_v<
               T, std::in_place_type_t<NotDefaultConstructible>>);
 static_assert(std::is_constructible_v<
               T, std::in_place_type_t<NotDefaultConstructible>, std::size_t>);
+
+using W = move_only_function<int()>;
+using Vec = std::vector<double>;
+
+// extension
+static_assert(
+    std::is_nothrow_constructible_v<W, nontype_t<[](Vec *) { return 0; }>,
+                                    std23::in_place_type_t<Vec *>>);
+static_assert(std::is_nothrow_constructible_v<
+              W, nontype_t<[](Vec &) { return 0; }>,
+              std23::in_place_type_t<std::reference_wrapper<Vec>>, Vec &>);
