@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(std23-functional-examples CXX)
 
-find_package(nontype_functional 0.7 CONFIG)
+find_package(nontype_functional 1.0 CONFIG)
 
 add_library(examples OBJECT)
 target_sources(examples PRIVATE

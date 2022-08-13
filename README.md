@@ -103,7 +103,7 @@ Feels like creating a member function for `FILE` on the fly, isn't it?
 
 - [x] 0.8 – `std::function_ref` & `std::function`
 - [x] 0.9 – `std::move_only_function`
-- [ ] 1.0 – `nontype_t` constructors for `move_only_function`
+- [x] 1.0 – `nontype_t` constructors for `move_only_function`
 - [ ] 1.1 – Support C++20 modules
 
 
@@ -112,8 +112,8 @@ Feels like creating a member function for `FILE` on the fly, isn't it?
 cppreference page for [`std::function`](https://en.cppreference.com/w/cpp/utility/functional/function)
 <br/>
 cppreference page for [`std::move_only_function`](https://en.cppreference.com/w/cpp/utility/functional/move_only_function)
-
-The documentation for `std::function_ref` is coming.
+<br/>
+[`std::function_ref`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0792r10.html#Wording) specification
 
 
 [^1]: Except for `std::function`'s `target()` member function, which is unimplemented because it requires RTTI.
