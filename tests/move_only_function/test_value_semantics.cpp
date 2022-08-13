@@ -88,3 +88,24 @@ static_assert(std::is_nothrow_move_assignable_v<T>);
 static_assert(std::is_nothrow_swappable_v<T>);
 
 static_assert(std::is_same_v<std::invoke_result_t<T, char>, R>);
+
+struct reject_rvalue
+{
+    reject_rvalue(reject_rvalue &) = default;
+
+    void operator()(int) {}
+    void mf(int) {}
+};
+
+static_assert(not std::is_move_constructible_v<reject_rvalue>);
+static_assert(std::is_invocable_r_v<void, reject_rvalue, int>);
+
+static_assert(std::is_constructible_v<T, reject_rvalue &>);
+static_assert(not std::is_constructible_v<T, reject_rvalue>,
+              "target object must be initialized");
+
+static_assert(
+    std::is_constructible_v<T, nontype_t<&reject_rvalue::mf>, reject_rvalue &>);
+static_assert(not std::is_constructible_v<T, nontype_t<&reject_rvalue::mf>,
+                                          reject_rvalue>,
+              "bounded target object must be initialized");
