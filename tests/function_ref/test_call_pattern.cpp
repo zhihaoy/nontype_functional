@@ -35,6 +35,7 @@ suite call_pattern = []
         given("a signature that takes parameter by value") =
             []<template<class> class C, class T>(C<T> ty)
         {
+#if !defined(_MSC_VER) || _MSC_VER != 1933
             boost::ut::log << ty;
 
             T fr = make_call;
@@ -54,6 +55,7 @@ suite call_pattern = []
 
                 then("made at most one copy") = [&] { expect(n <= 1_i); };
             };
+#endif
         } | std::tuple(type<function_ref<void(Track)>>,
                        type<std::function<void(Track)>>);
 
