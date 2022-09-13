@@ -88,6 +88,7 @@ using U = function_ref<int() const>;
 static_assert(std::is_constructible_v<T, nontype_t<&A::g>, A &>);
 static_assert(not std::is_constructible_v<T, nontype_t<&A::g>, A>,
               "cannot bind rvalue");
+static_assert(not std::is_constructible_v<T, nontype_t<&A::g>, A const>);
 
 static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A &>);
 static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A>);
@@ -97,6 +98,7 @@ static_assert(not std::is_constructible_v<T, nontype_t<&A::k>, A>);
 
 static_assert(not std::is_constructible_v<T, nontype_t<h>, A>,
               "free function does not bind rvalue either");
+static_assert(not std::is_constructible_v<T, nontype_t<h>, A const>);
 
 static_assert(not std::is_constructible_v<T, nontype_t<h>, A *>,
               "free function does not bind pointers");
