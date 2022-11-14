@@ -192,32 +192,32 @@ struct _not_qualifying_this<R(Args...) const volatile && noexcept>
     : _not_qualifying_this<R(Args...) noexcept>
 {};
 
-template<class T> struct _drop_first_arg_to_invoke;
+template<class F, class T> struct _drop_first_arg_to_invoke;
 
-template<class R, class T, class... Args>
-struct _drop_first_arg_to_invoke<R (*)(T, Args...)>
+template<class T, class R, class G, class... Args>
+struct _drop_first_arg_to_invoke<R (*)(G, Args...), T>
 {
     using type = R(Args...);
 };
 
-template<class R, class T, class... Args>
-struct _drop_first_arg_to_invoke<R (*)(T, Args...) noexcept>
+template<class T, class R, class G, class... Args>
+struct _drop_first_arg_to_invoke<R (*)(G, Args...) noexcept, T>
 {
     using type = R(Args...) noexcept;
 };
 
-template<class T, class Cls> requires std::is_object_v<T>
-struct _drop_first_arg_to_invoke<T Cls::*>
+template<class T, class M, class G> requires std::is_object_v<M>
+struct _drop_first_arg_to_invoke<M G::*, T>
 {
-    using type = T();
+    using type = std::invoke_result_t<M G::*, T>();
 };
 
-template<class T, class Cls> requires std::is_function_v<T>
-struct _drop_first_arg_to_invoke<T Cls::*> : _not_qualifying_this<T>
+template<class T, class M, class G> requires std::is_function_v<M>
+struct _drop_first_arg_to_invoke<M G::*, T> : _not_qualifying_this<M>
 {};
 
-template<class Fp>
-using _drop_first_arg_to_invoke_t = _drop_first_arg_to_invoke<Fp>::type;
+template<class F, class T>
+using _drop_first_arg_to_invoke_t = _drop_first_arg_to_invoke<F, T>::type;
 
 } // namespace std23
 

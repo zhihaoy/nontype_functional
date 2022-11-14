@@ -332,10 +332,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
         return __builtin_memcmp(storage_, &null, sizeof(void *)) != 0;
     }
 
-    friend bool operator==(function const &f, nullptr_t) noexcept
-    {
-        return !f;
-    }
+    friend bool operator==(function const &f, nullptr_t) noexcept { return !f; }
 
     R operator()(Args... args) const requires(!signature::is_variadic)
     {
@@ -382,16 +379,16 @@ template<class F> requires std::is_function_v<F>
 function(F *) -> function<_strip_noexcept_t<F>>;
 
 template<class T>
-function(T) -> function<
-    _strip_noexcept_t<_drop_first_arg_to_invoke_t<decltype(&T::operator())>>>;
+function(T) -> function<_strip_noexcept_t<
+    _drop_first_arg_to_invoke_t<decltype(&T::operator()), void>>>;
 
 template<auto V>
 function(nontype_t<V>)
     -> function<_strip_noexcept_t<_adapt_signature_t<decltype(V)>>>;
 
-template<auto V>
-function(nontype_t<V>, auto)
-    -> function<_strip_noexcept_t<_drop_first_arg_to_invoke_t<decltype(V)>>>;
+template<auto V, class T>
+function(nontype_t<V>, T)
+    -> function<_strip_noexcept_t<_drop_first_arg_to_invoke_t<decltype(V), T>>>;
 
 } // namespace std23
 

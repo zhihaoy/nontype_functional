@@ -146,7 +146,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     constexpr function_ref(nontype_t<f>) noexcept
         requires is_invocable_using<decltype(f)>
         : fptr_(
-              [](storage, _param_t<Args>... args) noexcept(noex) {
+              [](storage, _param_t<Args>... args) noexcept(noex) -> R {
                   return std23::invoke_r<R>(
                       f, static_cast<decltype(args)>(args)...);
               })
@@ -161,7 +161,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
         requires(not std::is_rvalue_reference_v<U &&> and
                  is_invocable_using<decltype(f), cvref<T>>)
         : fptr_(
-              [](storage this_, _param_t<Args>... args) noexcept(noex)
+              [](storage this_, _param_t<Args>... args) noexcept(noex) -> R
               {
                   cvref<T> obj = *get<T>(this_);
                   return std23::invoke_r<R>(
@@ -178,7 +178,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     constexpr function_ref(nontype_t<f>, cv<T> *obj) noexcept
         requires is_invocable_using<decltype(f), decltype(obj)>
         : fptr_(
-              [](storage this_, _param_t<Args>... args) noexcept(noex)
+              [](storage this_, _param_t<Args>... args) noexcept(noex) -> R
               {
                   return std23::invoke_r<R>(
                       f, get<cv<T>>(this_),
@@ -205,9 +205,9 @@ function_ref(F *) -> function_ref<F>;
 template<auto V>
 function_ref(nontype_t<V>) -> function_ref<_adapt_signature_t<decltype(V)>>;
 
-template<auto V>
-function_ref(nontype_t<V>, auto)
-    -> function_ref<_drop_first_arg_to_invoke_t<decltype(V)>>;
+template<auto V, class T>
+function_ref(nontype_t<V>, T &&)
+    -> function_ref<_drop_first_arg_to_invoke_t<decltype(V), T>>;
 
 } // namespace std23
 
