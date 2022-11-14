@@ -3,6 +3,8 @@
 
 #include "__functional_base.h"
 
+#include <cassert>
+
 namespace std23
 {
 
@@ -113,7 +115,9 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
                       return get<F>(fn_)(static_cast<decltype(args)>(args)...);
               }),
           obj_(f)
-    {}
+    {
+        assert(f != nullptr && "must reference a function");
+    }
 
     template<class F, class T = std::remove_reference_t<F>>
     constexpr function_ref(F &&f) noexcept
@@ -138,42 +142,56 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
                  is_invocable_using<cvref<T>>)
         = delete;
 
-    template<auto F>
-    constexpr function_ref(nontype_t<F>) noexcept
-        requires is_invocable_using<decltype(F)>
+    template<auto f>
+    constexpr function_ref(nontype_t<f>) noexcept
+        requires is_invocable_using<decltype(f)>
         : fptr_(
               [](storage, _param_t<Args>... args) noexcept(noex) {
                   return std23::invoke_r<R>(
-                      F, static_cast<decltype(args)>(args)...);
+                      f, static_cast<decltype(args)>(args)...);
               })
-    {}
+    {
+        using F = decltype(f);
+        if constexpr (std::is_pointer_v<F> or std::is_member_pointer_v<F>)
+            static_assert(f != nullptr, "NTTP callable must be usable");
+    }
 
-    template<auto F, class U, class T = std::remove_reference_t<U>>
-    constexpr function_ref(nontype_t<F>, U &&obj) noexcept
+    template<auto f, class U, class T = std::remove_reference_t<U>>
+    constexpr function_ref(nontype_t<f>, U &&obj) noexcept
         requires(not std::is_rvalue_reference_v<U &&> and
-                 is_invocable_using<decltype(F), cvref<T>>)
+                 is_invocable_using<decltype(f), cvref<T>>)
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
               {
                   cvref<T> obj = *get<T>(this_);
                   return std23::invoke_r<R>(
-                      F, obj, static_cast<decltype(args)>(args)...);
+                      f, obj, static_cast<decltype(args)>(args)...);
               }),
           obj_(std::addressof(obj))
-    {}
+    {
+        using F = decltype(f);
+        if constexpr (std::is_pointer_v<F> or std::is_member_pointer_v<F>)
+            static_assert(f != nullptr, "NTTP callable must be usable");
+    }
 
-    template<auto F, class T>
-    constexpr function_ref(nontype_t<F>, cv<T> *obj) noexcept
-        requires is_invocable_using<decltype(F), decltype(obj)>
+    template<auto f, class T>
+    constexpr function_ref(nontype_t<f>, cv<T> *obj) noexcept
+        requires is_invocable_using<decltype(f), decltype(obj)>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex)
               {
                   return std23::invoke_r<R>(
-                      F, get<cv<T>>(this_),
+                      f, get<cv<T>>(this_),
                       static_cast<decltype(args)>(args)...);
               }),
           obj_(obj)
-    {}
+    {
+        using F = decltype(f);
+        if constexpr (std::is_pointer_v<F> or std::is_member_pointer_v<F>)
+            static_assert(f != nullptr, "NTTP callable must be usable");
+
+        assert(obj != nullptr && "must reference an object");
+    }
 
     constexpr R operator()(Args... args) const noexcept(noex)
     {
