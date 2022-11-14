@@ -34,6 +34,13 @@ suite safety = []
                 then("it does not dangle either") = [&]
                 { expect(fr(a) == ch<'h'>); };
             };
+
+            when("it rebinds to a nttp pointer to member function") = [&]
+            {
+                fr = nontype<&A::g>;
+
+                then("it never dangles") = [&] { expect(fr(a) == ch<'g'>); };
+            };
         };
     };
 };
