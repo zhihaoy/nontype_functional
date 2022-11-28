@@ -88,7 +88,7 @@ suite inplace = []
     {
         given("a target type without a default ctor") = []
         {
-            T fn(in_place_type<NotDefaultConstructible>, 3, 2); // [2, 2, 2]
+            T fn(in_place_type<NotDefaultConstructible>, 3u, 2); // [2, 2, 2]
 
             then("direct-non-list-initialization may be requested") = [&]
             {
@@ -140,7 +140,7 @@ suite inplace = []
                 move_only_function<std::string()> fn(
                     nontype<[](std::vector<double> &v)
                             { return std::to_string(v.size()); }>,
-                    in_place_type<std::vector<double>>, 4);
+                    in_place_type<std::vector<double>>, 4u);
 
                 then("in-place construct") = [&] { expect(fn() == "4"sv); };
             };
