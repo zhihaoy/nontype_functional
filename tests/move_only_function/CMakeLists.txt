@@ -11,6 +11,7 @@ target_sources(run-move_only_function PRIVATE
  "test_reference_semantics.cpp"
  "test_noexcept.cpp"
  "test_nontype.cpp"
+ "test_return_reference.cpp"
 )
 target_link_libraries(run-move_only_function PRIVATE nontype_functional kris-ut)
 set_target_properties(run-move_only_function PROPERTIES OUTPUT_NAME run)

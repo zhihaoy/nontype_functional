@@ -207,8 +207,7 @@ template<bool noex, class R, class... Args> struct _callable_trait
     // See also: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71954
     template<class T, template<class> class quals>
     static inline constinit vtable callable_target{
-        .call =
-            [](handle this_, Args... args) noexcept(noex)
+        .call = [](handle this_, Args... args) noexcept(noex) -> R
         {
             if constexpr (std::is_lvalue_reference_v<T> or std::is_pointer_v<T>)
             {
@@ -234,14 +233,13 @@ template<bool noex, class R, class... Args> struct _callable_trait
 
     template<auto f>
     static inline constinit vtable unbound_callable_target{
-        .call = [](handle, Args... args) noexcept(noex)
+        .call = [](handle, Args... args) noexcept(noex) -> R
         { return std23::invoke_r<R>(f, static_cast<Args>(args)...); },
     };
 
     template<auto f, class T, template<class> class quals>
     static inline constinit vtable bound_callable_target{
-        .call =
-            [](handle this_, Args... args) noexcept(noex)
+        .call = [](handle this_, Args... args) noexcept(noex) -> R
         {
             if constexpr (std::is_pointer_v<T>)
             {
