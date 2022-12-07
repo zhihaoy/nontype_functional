@@ -114,7 +114,7 @@ cppreference page for [`std::function`](https://en.cppreference.com/w/cpp/utilit
 <br/>
 cppreference page for [`std::move_only_function`](https://en.cppreference.com/w/cpp/utility/functional/move_only_function)
 <br/>
-[`std::function_ref`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0792r12.html#Wording) specification
+[`std::function_ref`](https://wg21.link/p0792r12#Wording) specification
 
 
 [^1]: Except for `std::function`'s `target()` member function, which is unimplemented because it requires RTTI.

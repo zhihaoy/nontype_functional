@@ -35,7 +35,7 @@ suite call_pattern = []
         given("a signature that takes parameter by value") =
             []<template<class> class C, class T>(C<T> ty)
         {
-#if !defined(_MSC_VER) || _MSC_VER != 1933
+#if !defined(_MSC_VER) || (_MSC_VER != 1933 && _MSC_VER != 1934)
             boost::ut::log << ty;
 
             T fr = make_call;
