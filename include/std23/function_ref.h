@@ -190,7 +190,8 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
         if constexpr (std::is_pointer_v<F> or std::is_member_pointer_v<F>)
             static_assert(f != nullptr, "NTTP callable must be usable");
 
-        assert(obj != nullptr && "must reference an object");
+        if constexpr (std::is_member_pointer_v<F>)
+            assert(obj != nullptr && "must reference an object");
     }
 
     constexpr R operator()(Args... args) const noexcept(noex)
