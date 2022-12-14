@@ -83,10 +83,11 @@ struct _function_ref_base
 };
 
 template<class Sig, class = typename _qual_fn_sig<Sig>::function>
-class function_ref;
+class function_ref; // freestanding
 
 template<class Sig, class R, class... Args>
-class function_ref<Sig, R(Args...)> : _function_ref_base
+class function_ref<Sig, R(Args...)> // freestanding
+    : _function_ref_base
 {
     using signature = _qual_fn_sig<Sig>;
 
@@ -139,7 +140,7 @@ class function_ref<Sig, R(Args...)> : _function_ref_base
     template<class T>
     function_ref &operator=(T)
         requires(_is_not_self<T, function_ref> and not std::is_pointer_v<T> and
-                 is_invocable_using<cvref<T>>)
+                 _is_not_nontype_t<T>)
         = delete;
 
     template<auto f>
@@ -208,7 +209,7 @@ function_ref(nontype_t<V>) -> function_ref<_adapt_signature_t<decltype(V)>>;
 
 template<auto V, class T>
 function_ref(nontype_t<V>, T &&)
-    -> function_ref<_drop_first_arg_to_invoke_t<decltype(V), T>>;
+    -> function_ref<_drop_first_arg_to_invoke_t<decltype(V), T &>>;
 
 } // namespace std23
 
