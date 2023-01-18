@@ -428,7 +428,9 @@ class move_only_function<S, R(Args...)>
                                 in_place_type_t<std::unique_ptr<T>>,
                                 Inits &&...inits) noexcept( //
         std::is_nothrow_constructible_v<std::unique_ptr<T>, Inits...>)
-        requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *>
+        requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *> and
+                 std::is_constructible_v<std::unique_ptr<T>,
+                                         Inits...>
         : move_only_function(t,
                              std::unique_ptr<T>(std::forward<Inits>(inits)...))
     {}

@@ -71,12 +71,6 @@ suite unique_callable = []
             T fn(nontype<&inlined_fixed_string::slice>,
                  inlined_fixed_string::make_unique("coffee engineering"sv));
 
-            static_assert(
-                not std::is_constructible_v<
-                    T, nontype_t<&inlined_fixed_string::slice>,
-                    std::unique_ptr<inlined_fixed_string> &>,
-                "users cannot construct the same wrapper from an lvalue");
-
             when("calling the wrapper") = [&]
             {
                 then("the object works as an lvalue") = [&]
@@ -106,3 +100,21 @@ suite unique_callable = []
         };
     };
 };
+
+static_assert(
+    std::is_constructible_v<T, nontype_t<&inlined_fixed_string::slice>,
+                            std::unique_ptr<inlined_fixed_string>>);
+static_assert(
+    not std::is_constructible_v<T, nontype_t<&inlined_fixed_string::slice>,
+                                std::unique_ptr<inlined_fixed_string> &>,
+    "users cannot construct the same wrapper from an lvalue");
+
+static_assert(std::is_constructible_v<
+              T, nontype_t<&inlined_fixed_string::slice>,
+              std::in_place_type_t<std::unique_ptr<inlined_fixed_string>>,
+              inlined_fixed_string *>);
+static_assert(not std::is_constructible_v<
+                  T, nontype_t<&inlined_fixed_string::slice>,
+                  std::in_place_type_t<std::unique_ptr<inlined_fixed_string>>,
+                  std::unique_ptr<inlined_fixed_string> &>,
+              "move-only type cannot be in-place constructed from lvalue");
