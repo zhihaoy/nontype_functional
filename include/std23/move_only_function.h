@@ -3,6 +3,7 @@
 
 #include "__functional_base.h"
 
+#include <memory>
 #include <new>
 #include <utility>
 
@@ -268,6 +269,22 @@ template<bool noex, class R, class... Args> struct _callable_trait
                 delete get<T>(this_);
         },
     };
+
+    template<auto f, class T>
+    static inline constinit vtable boxed_callable_target{
+        .call = [](handle this_, Args... args) noexcept(noex) -> R {
+            return std23::invoke_r<R>(f, get<T>(this_),
+                                      static_cast<Args>(args)...);
+        },
+        .destroy =
+            [](handle this_) noexcept
+        {
+            using D = std::unique_ptr<T>::deleter_type;
+            static_assert(std::is_trivially_default_constructible_v<D>);
+            if (auto p = get<T>(this_))
+                D()(p);
+        },
+    };
 };
 
 template<class T, template<class...> class Primary>
@@ -362,6 +379,12 @@ class move_only_function<S, R(Args...)>
           obj_(_take_reference(std::forward<T>(x)))
     {}
 
+    template<class M, class C, M C::*f, class T>
+    move_only_function(nontype_t<f>, std::unique_ptr<T> &&x) noexcept
+        requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *>
+        : vtbl_(trait::template boxed_callable_target<f, T>), obj_(x.release())
+    {}
+
     template<class T, class... Inits>
     explicit move_only_function(in_place_type_t<T>, Inits &&...inits) noexcept(
         std::is_nothrow_invocable_v<decltype(_build_reference<T>), Inits...>)
@@ -399,6 +422,16 @@ class move_only_function<S, R(Args...)>
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);
     }
+
+    template<class M, class C, M C::*f, class T, class... Inits>
+    explicit move_only_function(nontype_t<f> t,
+                                in_place_type_t<std::unique_ptr<T>>,
+                                Inits &&...inits) noexcept( //
+        std::is_nothrow_constructible_v<std::unique_ptr<T>, Inits...>)
+        requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *>
+        : move_only_function(t,
+                             std::unique_ptr<T>(std::forward<Inits>(inits)...))
+    {}
 
     template<auto f, class T, class U, class... Inits>
     explicit move_only_function(nontype_t<f>, in_place_type_t<T>,
