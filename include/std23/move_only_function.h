@@ -300,8 +300,8 @@ inline constexpr bool _does_not_specialize =
 template<class S, class = typename _full_fn_sig<S>::function>
 class move_only_function;
 
-template<class S>
-struct _move_only_function_trait
+template<class S, class R, class... Args>
+struct _move_only_function_base_base
 {
     using signature = _full_fn_sig<S>;
 
@@ -312,83 +312,141 @@ struct _move_only_function_trait
     static constexpr bool is_const = std::is_same_v<cv<void>, void const>;
     static constexpr bool is_lvalue_only = std::is_same_v<ref<int>, int &>;
     static constexpr bool is_rvalue_only = std::is_same_v<ref<int>, int &&>;
-    static constexpr bool is_ref_only = is_lvalue_only || is_rvalue_only;
 
-    using derived = move_only_function<S>;
+    using trait = _callable_trait<noex, R, _param_t<Args>...>;
+    using vtable = typename trait::vtable;
+
+    std::reference_wrapper<vtable const> vtbl_ = trait::abstract_base;
+    _move_only_pointer obj_;
+
+    _move_only_function_base_base() = default;
+    _move_only_function_base_base(_move_only_function_base_base &&) = default;
+    _move_only_function_base_base &operator=(_move_only_function_base_base &&) = default;
+
+    _move_only_function_base_base(vtable const &vtbl)
+        : vtbl_(vtbl)
+    {}
+
+    template<class Obj>
+    _move_only_function_base_base(vtable const &vtbl, Obj &&obj)
+        : vtbl_(vtbl), obj_(std::forward<Obj>(obj))
+    {}
+
+    R call(Args... args) noexcept(noex)
+    {
+        return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
+    }
+
+    R call(Args... args) const noexcept(noex)
+    {
+        return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
+    }
 };
 
 template<class S, class R, class... Args>
-struct _move_only_function_base;
-
-template<class S, class R, class... Args>
-    requires (not _move_only_function_trait<S>::is_ref_only)
-struct _move_only_function_base<S, R, Args...> : _move_only_function_trait<S>
+struct _move_only_function_base : _move_only_function_base_base<S, R, Args...>
 {
-    using base = _move_only_function_trait<S>;
+    using base = _move_only_function_base_base<S, R, Args...>;
 
     using typename base::signature;
     template<class T> using cv = typename base::template cv<T>;
     template<class T> using ref = typename base::template ref<T>;
-    using typename base::derived;
 
     using base::noex;
     using base::is_const;
     using base::is_lvalue_only;
     using base::is_rvalue_only;
-    using base::is_ref_only;
+
+    using base::vtbl_;
+    using base::obj_;
+
+    using typename base::trait;
+
+    using base::base;
+    using base::call;
 
     R operator()(Args... args) noexcept(noex)
-        requires(!is_const and !is_lvalue_only and !is_rvalue_only)
+        requires(not is_const)
     {
-        return static_cast<derived *>(this)->call(std::forward<Args>(args)...);
+        return call(std::forward<Args>(args)...);
     }
 
     R operator()(Args... args) const noexcept(noex)
-        requires(is_const and !is_lvalue_only and !is_rvalue_only)
+        requires is_const
     {
-        return static_cast<const derived *>(this)->call(std::forward<Args>(args)...);
+        return call(std::forward<Args>(args)...);
     }
 };
 
 template<class S, class R, class... Args>
-    requires _move_only_function_trait<S>::is_ref_only
-struct _move_only_function_base<S, R, Args...> : _move_only_function_trait<S>
+    requires _move_only_function_base_base<S, R, Args...>::is_lvalue_only
+struct _move_only_function_base<S, R, Args...> : _move_only_function_base_base<S, R, Args...>
 {
-    using base = _move_only_function_trait<S>;
+    using base = _move_only_function_base_base<S, R, Args...>;
 
     using typename base::signature;
     template<class T> using cv = typename base::template cv<T>;
     template<class T> using ref = typename base::template ref<T>;
-    using typename base::derived;
 
     using base::noex;
     using base::is_const;
     using base::is_lvalue_only;
     using base::is_rvalue_only;
-    using base::is_ref_only;
+
+    using base::vtbl_;
+    using base::obj_;
+
+    using typename base::trait;
+
+    using base::base;
+    using base::call;
 
     R operator()(Args... args) &noexcept(noex)
-        requires(!is_const and is_lvalue_only and !is_rvalue_only)
+        requires(not is_const)
     {
-        return static_cast<derived *>(this)->call(std::forward<Args>(args)...);
+        return call(std::forward<Args>(args)...);
     }
 
     R operator()(Args... args) const &noexcept(noex)
-        requires(is_const and is_lvalue_only and !is_rvalue_only)
+        requires is_const
     {
-        return static_cast<const derived *>(this)->call(std::forward<Args>(args)...);
+        return call(std::forward<Args>(args)...);
     }
+};
+
+template<class S, class R, class... Args>
+    requires _move_only_function_base_base<S, R, Args...>::is_rvalue_only
+struct _move_only_function_base<S, R, Args...> : _move_only_function_base_base<S, R, Args...>
+{
+    using base = _move_only_function_base_base<S, R, Args...>;
+
+    using typename base::signature;
+    template<class T> using cv = typename base::template cv<T>;
+    template<class T> using ref = typename base::template ref<T>;
+
+    using base::noex;
+    using base::is_const;
+    using base::is_lvalue_only;
+    using base::is_rvalue_only;
+
+    using base::vtbl_;
+    using base::obj_;
+
+    using typename base::trait;
+
+    using base::base;
+    using base::call;
 
     R operator()(Args... args) &&noexcept(noex)
-        requires(!is_const and !is_lvalue_only and is_rvalue_only)
+        requires(not is_const)
     {
-        return static_cast<derived *>(this)->call(std::forward<Args>(args)...);
+        return call(std::forward<Args>(args)...);
     }
 
     R operator()(Args... args) const &&noexcept(noex)
-        requires(is_const and !is_lvalue_only and is_rvalue_only)
+        requires is_const
     {
-        return static_cast<const derived *>(this)->call(std::forward<Args>(args)...);
+        return call(std::forward<Args>(args)...);
     }
 };
 
@@ -403,10 +461,11 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
     template<class T> using ref = typename base::template ref<T>;
 
     using base::noex;
-    using base::is_const;
-    using base::is_lvalue_only;
-    using base::is_rvalue_only;
-    using base::is_ref_only;
+
+    using base::vtbl_;
+    using base::obj_;
+
+    using typename base::trait;
 
     template<class T> using cvref = ref<cv<T>>;
     template<class T>
@@ -427,12 +486,6 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
     template<auto f, class VT>
     static constexpr bool is_callable_as_if_from =
         is_invocable_using<decltype(f), inv_quals<VT>>;
-
-    using trait = _callable_trait<noex, R, _param_t<Args>...>;
-    using vtable = typename trait::vtable;
-
-    std::reference_wrapper<vtable const> vtbl_ = trait::abstract_base;
-    _move_only_pointer obj_;
 
   public:
     using result_type = R;
@@ -461,7 +514,7 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
     template<auto f>
     move_only_function(nontype_t<f>) noexcept
         requires is_invocable_using<decltype(f)>
-        : vtbl_(trait::template unbound_callable_target<f>)
+        : base(trait::template unbound_callable_target<f>)
     {}
 
     template<auto f, class T, class VT = std::decay_t<T>>
@@ -469,24 +522,24 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
         std::is_nothrow_invocable_v<decltype(_take_reference), T>)
         requires is_callable_as_if_from<f, VT> and
                      std::is_constructible_v<VT, T>
-        : vtbl_(trait::template bound_callable_target<
-                f, std::unwrap_ref_decay_t<T>, inv_quals_f>),
-          obj_(_take_reference(std::forward<T>(x)))
+        : base(trait::template bound_callable_target<
+                f, std::unwrap_ref_decay_t<T>, inv_quals_f>,
+               _take_reference(std::forward<T>(x)))
     {}
 
     template<class M, class C, M C::*f, class T>
     move_only_function(nontype_t<f>, std::unique_ptr<T> &&x) noexcept
         requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *>
-        : vtbl_(trait::template boxed_callable_target<f, T>), obj_(x.release())
+        : base(trait::template boxed_callable_target<f, T>, x.release())
     {}
 
     template<class T, class... Inits>
     explicit move_only_function(in_place_type_t<T>, Inits &&...inits) noexcept(
         std::is_nothrow_invocable_v<decltype(_build_reference<T>), Inits...>)
         requires is_callable_from<T> and std::is_constructible_v<T, Inits...>
-        : vtbl_(trait::template callable_target<std::unwrap_reference_t<T>,
-                                                inv_quals_f>),
-          obj_(_build_reference<T>(std::forward<Inits>(inits)...))
+        : base(trait::template callable_target<std::unwrap_reference_t<T>,
+                                                inv_quals_f>,
+               _build_reference<T>(std::forward<Inits>(inits)...))
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);
     }
@@ -498,9 +551,9 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
                                     decltype((ilist)), Inits...>)
         requires is_callable_from<T> and
                      std::is_constructible_v<T, decltype((ilist)), Inits...>
-        : vtbl_(trait::template callable_target<std::unwrap_reference_t<T>,
-                                                inv_quals_f>),
-          obj_(_build_reference<T>(ilist, std::forward<Inits>(inits)...))
+        : base(trait::template callable_target<std::unwrap_reference_t<T>,
+                                                inv_quals_f>,
+              _build_reference<T>(ilist, std::forward<Inits>(inits)...))
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);
     }
@@ -511,9 +564,9 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
         std::is_nothrow_invocable_v<decltype(_build_reference<T>), Inits...>)
         requires is_callable_as_if_from<f, T> and
                      std::is_constructible_v<T, Inits...>
-        : vtbl_(trait::template bound_callable_target<
-                f, std::unwrap_reference_t<T>, inv_quals_f>),
-          obj_(_build_reference<T>(std::forward<Inits>(inits)...))
+        : base(trait::template bound_callable_target<
+                f, std::unwrap_reference_t<T>, inv_quals_f>,
+               _build_reference<T>(std::forward<Inits>(inits)...))
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);
     }
@@ -538,9 +591,9 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
                                     decltype((ilist)), Inits...>)
         requires is_callable_as_if_from<f, T> and
                      std::is_constructible_v<T, decltype((ilist)), Inits...>
-        : vtbl_(trait::template bound_callable_target<
-                f, std::unwrap_reference_t<T>, inv_quals_f>),
-          obj_(_build_reference<T>(ilist, std::forward<Inits>(inits)...))
+        : base(trait::template bound_callable_target<
+                f, std::unwrap_reference_t<T>, inv_quals_f>,
+               _build_reference<T>(ilist, std::forward<Inits>(inits)...))
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);
     }
@@ -573,15 +626,6 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
     using base::operator();
 
   private:
-    R call(Args... args) noexcept(noex)
-    {
-        return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
-    }
-
-    R call(Args... args) const noexcept(noex)
-    {
-        return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
-    }
 };
 
 } // namespace std23
