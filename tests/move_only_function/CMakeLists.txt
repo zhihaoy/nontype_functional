@@ -14,6 +14,8 @@ target_sources(run-move_only_function PRIVATE
  "test_return_reference.cpp"
  "test_unique.cpp"
 )
+target_compile_options(run-move_only_function PRIVATE
+    $<$<COMPILE_LANG_AND_ID:CXX,Clang>:-fsized-deallocation>)
 target_link_libraries(run-move_only_function PRIVATE nontype_functional kris-ut)
 set_target_properties(run-move_only_function PROPERTIES OUTPUT_NAME run)
 add_test(move_only_function run)

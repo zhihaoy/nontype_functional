@@ -10,6 +10,8 @@ template<class... T> struct overload : T...
     using T::operator()...;
 };
 
+template<class... T> overload(T...) -> overload<T...>;
+
 constexpr auto call = overload{throwable_call, nothrow_call};
 
 int f_good() noexcept

@@ -8,6 +8,9 @@ namespace
 
 struct A
 {
+    A() = default;
+    A(int a) : val{a} {}
+
     int add(int a)
     {
         val += a;
