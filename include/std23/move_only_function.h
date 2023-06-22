@@ -348,7 +348,6 @@ struct _move_only_function_base : _move_only_function_base_base<S, R, Args...>
 {
     using base = _move_only_function_base_base<S, R, Args...>;
 
-    using typename base::signature;
     template<class T> using cv = typename base::template cv<T>;
     template<class T> using ref = typename base::template ref<T>;
 
@@ -356,9 +355,6 @@ struct _move_only_function_base : _move_only_function_base_base<S, R, Args...>
     using base::is_const;
     using base::is_lvalue_only;
     using base::is_rvalue_only;
-
-    using base::vtbl_;
-    using base::obj_;
 
     using typename base::trait;
 
@@ -420,7 +416,6 @@ struct _move_only_function_base<S, R, Args...> : _move_only_function_base_base<S
 {
     using base = _move_only_function_base_base<S, R, Args...>;
 
-    using typename base::signature;
     template<class T> using cv = typename base::template cv<T>;
     template<class T> using ref = typename base::template ref<T>;
 
@@ -454,9 +449,7 @@ template<class S, class R, class... Args>
 class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...>
 {
     using base = _move_only_function_base<S, R, Args...>;
-    friend base;
 
-    using typename base::signature;
     template<class T> using cv = typename base::template cv<T>;
     template<class T> using ref = typename base::template ref<T>;
 
@@ -624,8 +617,6 @@ class move_only_function<S, R(Args...)> : _move_only_function_base<S, R, Args...
     }
 
     using base::operator();
-
-  private:
 };
 
 } // namespace std23
