@@ -91,7 +91,10 @@ class function_ref<Sig, R(Args...)> // freestanding
         : fptr_(
               [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
               {
-                  return get<F>(fn_)(static_cast<decltype(args)>(args)...);
+                  if constexpr (std::is_void_v<R>)
+                      get<F>(fn_)(static_cast<decltype(args)>(args)...);
+                  else
+                      return get<F>(fn_)(static_cast<decltype(args)>(args)...);
               }),
           obj_(f)
     {
@@ -107,7 +110,10 @@ class function_ref<Sig, R(Args...)> // freestanding
               [](storage fn_, _param_t<Args>... args) noexcept(noex) -> R
               {
                   cvref<T> obj = *get<T>(fn_);
-                  return obj(static_cast<decltype(args)>(args)...);
+                  if constexpr (std::is_void_v<R>)
+                      obj(static_cast<decltype(args)>(args)...);
+                  else
+                      return obj(static_cast<decltype(args)>(args)...);
               }),
           obj_(std::addressof(f))
     {}
