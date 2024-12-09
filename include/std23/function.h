@@ -314,7 +314,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
     explicit operator bool() const noexcept
     {
         constexpr empty_target_object null;
-        return __builtin_memcmp(storage_, &null, sizeof(void *)) != 0;
+        return __builtin_memcmp(storage_, (void *)&null, sizeof(void *)) != 0;
     }
 
     friend bool operator==(function const &f, nullptr_t) noexcept { return !f; }
