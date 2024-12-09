@@ -7,13 +7,14 @@ inline constexpr bool deduction_enabled = type_traits::is_valid<T>(
 void test_ctad()
 {
     {
-        function fn = [i = 0] { return 0; };
+        function fn = [i = 0] { return i; };
         static_assert(std::is_same_v<decltype(fn), function<int()>>);
         static_assert(std::is_same_v<decltype(fn)::result_type, int>);
     }
 
     {
-        function fn = [i = 0](int &&, int const) mutable { return "lit"; };
+        function fn = [i = 0](int &&, int const) mutable
+        { return (void)i, "lit"; };
         static_assert(
             std::is_same_v<decltype(fn), function<char const *(int &&, int)>>);
         static_assert(std::is_same_v<decltype(fn)::result_type, char const *>);
@@ -27,7 +28,7 @@ void test_ctad()
     }
 
     {
-        function fn = [i = 0]() noexcept { return 0; };
+        function fn = [i = 0]() noexcept { return i; };
         static_assert(std::is_same_v<decltype(fn), function<int()>>,
                       "[func.wrap.func.con]/16");
         static_assert(std::is_same_v<decltype(fn)::result_type, int>);
