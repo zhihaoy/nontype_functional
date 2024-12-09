@@ -7,7 +7,7 @@ template<class T> T &&identity_fn(T &&x)
 
 struct identity_fobj
 {
-    int x;
+    int x = 42;
 
     int const &operator()() const { return x; }
 };
