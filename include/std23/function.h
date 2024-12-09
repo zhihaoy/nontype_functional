@@ -3,7 +3,6 @@
 
 #include "__functional_base.h"
 
-#include <cstdarg>
 #include <memory>
 #include <new>
 
@@ -15,21 +14,10 @@ template<class Sig> struct _opt_fn_sig;
 template<class R, class... Args> struct _opt_fn_sig<R(Args...)>
 {
     using function_type = R(Args...);
-    static constexpr bool is_variadic = false;
 
     template<class... T>
     static constexpr bool is_invocable_using =
         std::is_invocable_r_v<R, T..., Args...>;
-};
-
-template<class R, class... Args> struct _opt_fn_sig<R(Args......)>
-{
-    using function_type = R(Args...);
-    static constexpr bool is_variadic = true;
-
-    template<class... T>
-    static constexpr bool is_invocable_using =
-        std::is_invocable_r_v<R, T..., Args..., va_list>;
 };
 
 template<class R, class... Args> struct _copyable_function
@@ -85,7 +73,7 @@ template<class R, class... Args> struct _copyable_function
         {}
 
         explicit stored_object(T p) noexcept requires std::is_pointer_v<T>
-        : p_(p)
+            : p_(p)
         {}
 
       protected:
@@ -201,10 +189,7 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 
     template<class T> using lvalue = std::decay_t<T> &;
 
-    using copyable_function =
-        std::conditional_t<signature::is_variadic,
-                           _copyable_function<R, _param_t<Args>..., va_list &>,
-                           _copyable_function<R, _param_t<Args>...>>;
+    using copyable_function = _copyable_function<R, _param_t<Args>...>;
 
     using lvalue_callable = copyable_function::lvalue_callable;
     using empty_target_object = copyable_function::empty_target_object;
@@ -334,31 +319,10 @@ template<class S, class R, class... Args> class function<S, R(Args...)>
 
     friend bool operator==(function const &f, nullptr_t) noexcept { return !f; }
 
-    R operator()(Args... args) const requires(!signature::is_variadic)
+    R operator()(Args... args) const
     {
         return (*target())(std::forward<Args>(args)...);
     }
-
-#if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-value"
-#endif
-
-    R operator()(Args... args...) const
-        requires(signature::is_variadic and sizeof...(Args) != 0)
-    {
-        struct raii
-        {
-            va_list data;
-            ~raii() { va_end(data); }
-        } va;
-        va_start(va.data, (args, ...));
-        return (*target())(std::forward<Args>(args)..., va.data);
-    }
-
-#if defined(__GNUC__) && (!defined(__clang__) || defined(__INTELLISENSE__))
-#pragma GCC diagnostic pop
-#endif
 };
 
 template<class S> struct _strip_noexcept;
@@ -380,7 +344,7 @@ function(F *) -> function<_strip_noexcept_t<F>>;
 
 template<class T>
 function(T) -> function<_strip_noexcept_t<
-    _drop_first_arg_to_invoke_t<decltype(&T::operator()), void>>>;
+                _drop_first_arg_to_invoke_t<decltype(&T::operator()), void>>>;
 
 template<auto V>
 function(nontype_t<V>)
