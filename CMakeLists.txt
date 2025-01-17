@@ -9,7 +9,7 @@ elseif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CXX_FLAGS)
     message(WARNING "No CMAKE_BUILD_TYPE is selected")
 endif()
 
-project(nontype_functional VERSION 1.0.1 LANGUAGES CXX)
+project(nontype_functional VERSION 1.0.2 LANGUAGES CXX)
 
 if(NOT DEFINED PROJECT_IS_TOP_LEVEL)
     if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
