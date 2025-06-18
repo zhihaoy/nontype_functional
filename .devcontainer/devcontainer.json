@@ -1,1 +1,76 @@
-{"image":"mcr.microsoft.com/devcontainers/cpp:ubuntu-20.04"}
+{
+    //  devcontainer.json is mapped to JSONC - hooray for comments !
+    "name": "${devcontainerId}",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "CLANG_RELEASE": "20",
+            "GCC_RELEASE": "15"
+        }
+    },
+    "initializeCommand": [
+        "/bin/mkdir",
+        "-p",
+        "/tmp/devcontainer-${localEnv:UID}/${devcontainerId}"
+    ],
+    "containerEnv": {
+        "DEVCONTAINER_ID": "${devcontainerId}",
+        // Pass ssh-agent sock for git authentication
+        "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh",
+        "CCACHE_BASEDIR": "${localWorkspaceFolder}",
+        "WORK": "${localWorkspaceFolder}"
+    },
+    "init": true,
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "llvm-vs-code-extensions.vscode-clangd",
+                "xaver.clang-format",
+                "ms-vscode.cpptools-themes",
+                "eamodio.gitlens",
+                "GitHub.vscode-pull-request-github",
+                "jeff-hykin.better-cpp-syntax",
+                "ajshort.include-autocomplete",
+                "ms-azuretools.vscode-docker",
+                "GitHub.remotehub",
+                "GitHub.github-vscode-theme",
+                "ms-vscode.cmake-tools",
+                "github.vscode-github-actions",
+                "bierner.markdown-preview-github-styles",
+                "donjayamanne.githistory",
+                "twxs.cmake",
+                "ms-vsliveshare.vsliveshare",
+                "harikrishnan94.cxx-compiler-explorer"
+            ]
+        }
+    },
+    //  Same workspace folder makes it easier to share files between host and container
+    "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=cached",
+    "workspaceFolder": "${localWorkspaceFolder}",
+    "mounts": [
+        {
+            "source": "/tmp/devcontainer-${localEnv:UID}/${devcontainerId}",
+            "target": "/tmp",
+            "type": "bind"
+        },
+        {
+            // Pass ssh-agent sock for git authentication
+            "source": "${localEnv:SSH_AUTH_SOCK}",
+            "target": "/run/user/${localEnv:UID}/ssh",
+            "type": "bind"
+        },
+        {
+            //  This allows sharing of ccache data between containers
+            "source": "ccache_data",
+            "target": "/root/.ccache",
+            "type": "volume"
+        }
+    ],
+    // For debugging
+    "capAdd": [
+        "SYS_PTRACE"
+    ],
+    "securityOpt": [
+        "seccomp=unconfined"
+    ]
+}
