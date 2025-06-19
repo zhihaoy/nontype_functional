@@ -28,59 +28,59 @@ void test_ctad()
     }
 
     {
-        auto fr = function_ref(nontype<f>);
+        auto fr = function_ref(cw<f>);
         static_assert(std::is_same_v<decltype(fr), function_ref<int()>>);
     }
 
     {
-        auto fr = function_ref(nontype<f_good>);
+        auto fr = function_ref(cw<f_good>);
         static_assert(
             std::is_same_v<decltype(fr), function_ref<int() noexcept>>);
     }
 
     {
-        auto fr = function_ref(nontype<h>);
+        auto fr = function_ref(cw<h>);
         static_assert(std::is_same_v<decltype(fr), function_ref<int(A)>>);
     }
 
     {
-        auto fr = function_ref(nontype<h_good>);
+        auto fr = function_ref(cw<h_good>);
         static_assert(
             std::is_same_v<decltype(fr), function_ref<int(A) noexcept>>);
     }
 
     {
         A a;
-        auto fr = function_ref(nontype<&A::g>, &a);
+        auto fr = function_ref(cw<&A::g>, &a);
         static_assert(std::is_same_v<decltype(fr), function_ref<int()>>);
     }
 
     {
         A a;
-        auto fr = function_ref(nontype<&A::k>, &a);
+        auto fr = function_ref(cw<&A::k>, &a);
         static_assert(std::is_same_v<decltype(fr), function_ref<int()>>,
                       "bound member function's qualifier is not deduced");
     }
 
     {
         A a;
-        auto fr = function_ref(nontype<&A::data>, &a);
+        auto fr = function_ref(cw<&A::data>, &a);
         static_assert(std::is_same_v<decltype(fr), function_ref<int &()>>);
 
-        auto fc = function_ref(nontype<&A::data>, std::as_const(a));
+        auto fc = function_ref(cw<&A::data>, std::as_const(a));
         static_assert(std::is_same_v<decltype(fc), function_ref<int const &()>>,
                       "type to retrieve data member depends on object");
     }
 
     {
         A a;
-        auto fr = function_ref(nontype<&h>, a);
+        auto fr = function_ref(cw<&h>, a);
         static_assert(std::is_same_v<decltype(fr), function_ref<int()>>);
     }
 
     {
         A a;
-        auto fr = function_ref(nontype<&h_good>, a);
+        auto fr = function_ref(cw<&h_good>, a);
         static_assert(
             std::is_same_v<decltype(fr), function_ref<int() noexcept>>);
     }

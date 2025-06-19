@@ -117,10 +117,9 @@ suite cvref = []
                 expect(call({t, a}) == ch<'k'>) << "by name";
                 expect(call({t, &a}) == ch<'k'>) << "by pointer";
                 expect(call({t, std::ref(a)}) == ch<'k'>) << "by refwrap";
-            } | std::tuple(nontype<&NoCall::unspecific_value_category>,
-                           nontype<&NoCall::immutable>,
-                           nontype<&NoCall::lvalue_only>,
-                           nontype<&NoCall::immutable_lvalue_only>);
+            } | std::tuple(cw<&NoCall::unspecific_value_category>,
+                           cw<&NoCall::immutable>, cw<&NoCall::lvalue_only>,
+                           cw<&NoCall::immutable_lvalue_only>);
         };
     };
 
@@ -172,8 +171,8 @@ suite cvref = []
                 expect(call({t, a}) == ch<'k'>) << "by name";
                 expect(call({t, &a}) == ch<'k'>) << "by pointer";
                 expect(call({t, std::ref(a)}) == ch<'k'>) << "by refwrap";
-            } | std::tuple(nontype<&NoCall::immutable>,
-                           nontype<&NoCall::immutable_lvalue_only>);
+            } | std::tuple(cw<&NoCall::immutable>,
+                           cw<&NoCall::immutable_lvalue_only>);
         };
     };
 
@@ -248,8 +247,8 @@ suite cvref = []
                 static_assert(
                     not is_valid<T>([&](auto t) -> decltype(call({t, &a})) {}),
                     "calling pointer-to-object works as if dereferenced");
-            } | std::tuple(nontype<&NoCall::rvalue_only>,
-                           nontype<&NoCall::immutable_rvalue_only>);
+            } | std::tuple(cw<&NoCall::rvalue_only>,
+                           cw<&NoCall::immutable_rvalue_only>);
         };
     };
 

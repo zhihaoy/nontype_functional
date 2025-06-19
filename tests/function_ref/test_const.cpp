@@ -42,23 +42,20 @@ suite const_qualified = []
         {
             A a;
 
-            when("binding by name") = [&] {
-                expect(call({nontype<&A::k>, a}) == ch<'k'>);
-            };
+            when("binding by name") = [&]
+            { expect(call({cw<&A::k>, a}) == ch<'k'>); };
 
-            when("binding by pointer") = [&] {
-                expect(call({nontype<&A::k>, &a}) == ch<'k'>);
-            };
+            when("binding by pointer") = [&]
+            { expect(call({cw<&A::k>, &a}) == ch<'k'>); };
 
             when("binding by reference_wrapper") = [&]
             {
                 std::reference_wrapper r = a;
-                expect(call({nontype<&A::k>, r}) == ch<'k'>);
+                expect(call({cw<&A::k>, r}) == ch<'k'>);
             };
 
-            when("binding free function by name") = [&] {
-                expect(call({nontype<h>, a}) == free_function);
-            };
+            when("binding free function by name") = [&]
+            { expect(call({cw<h>, a}) == free_function); };
         };
     };
 };
@@ -85,24 +82,24 @@ static_assert(not std::is_invocable_v<decltype(call), C_mut const &&>);
 using T = function_ref<int()>;
 using U = function_ref<int() const>;
 
-static_assert(std::is_constructible_v<T, nontype_t<&A::g>, A &>);
-static_assert(not std::is_constructible_v<T, nontype_t<&A::g>, A>,
+static_assert(std::is_constructible_v<T, constant_wrapper<&A::g>, A &>);
+static_assert(not std::is_constructible_v<T, constant_wrapper<&A::g>, A>,
               "cannot bind rvalue");
-static_assert(not std::is_constructible_v<T, nontype_t<&A::g>, A const>);
+static_assert(not std::is_constructible_v<T, constant_wrapper<&A::g>, A const>);
 
-static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A &>);
-static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A>);
+static_assert(not std::is_constructible_v<U, constant_wrapper<&A::g>, A &>);
+static_assert(not std::is_constructible_v<U, constant_wrapper<&A::g>, A>);
 
-static_assert(std::is_constructible_v<T, nontype_t<&A::k>, A &>);
-static_assert(not std::is_constructible_v<T, nontype_t<&A::k>, A>);
+static_assert(std::is_constructible_v<T, constant_wrapper<&A::k>, A &>);
+static_assert(not std::is_constructible_v<T, constant_wrapper<&A::k>, A>);
 
-static_assert(not std::is_constructible_v<T, nontype_t<h>, A>,
+static_assert(not std::is_constructible_v<T, constant_wrapper<h>, A>,
               "free function does not bind rvalue either");
-static_assert(not std::is_constructible_v<T, nontype_t<h>, A const>);
+static_assert(not std::is_constructible_v<T, constant_wrapper<h>, A const>);
 
-static_assert(not std::is_constructible_v<T, nontype_t<h>, A *>,
+static_assert(not std::is_constructible_v<T, constant_wrapper<h>, A *>,
               "free function does not bind pointers");
-static_assert(not std::is_constructible_v<T, nontype_t<h>, A const *>);
+static_assert(not std::is_constructible_v<T, constant_wrapper<h>, A const *>);
 
-static_assert(not std::is_constructible_v<U, nontype_t<h>, A *>);
-static_assert(not std::is_constructible_v<U, nontype_t<h>, A const *>);
+static_assert(not std::is_constructible_v<U, constant_wrapper<h>, A *>);
+static_assert(not std::is_constructible_v<U, constant_wrapper<h>, A const *>);

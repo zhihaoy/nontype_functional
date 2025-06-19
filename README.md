@@ -80,7 +80,7 @@ using std23::nontype;
 int main()
 {
     data_source input;
-    parse_ini({nontype<&data_source::read>, input});
+    parse_ini({cw<&data_source::read>, input});
 }
 ```
 
@@ -90,7 +90,7 @@ The `nontype` tag generalized the idea of *delegates* from other languages, like
 int main()
 {
     auto fp = ::fopen("my.ini", "r");
-    parse_ini({nontype<[](FILE *fh, auto ptr, auto n)
+    parse_ini({cw<[](FILE *fh, auto ptr, auto n)
                        { return ::fread(ptr, 1, n, fh); }>,
                fp});
     ::fclose(fp);

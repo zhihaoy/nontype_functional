@@ -41,7 +41,7 @@ suite nttp_callable = []
 
             when("binding a member function to a reference") = [=]() mutable
             {
-                function fn = {nontype<&A::set>, std::ref(obj)};
+                function fn = {cw<&A::set>, std::ref(obj)};
 
                 then("you can observe reference semantics") = [&]
                 {
@@ -52,7 +52,7 @@ suite nttp_callable = []
                 when("rebinding a different memfn with a pointer") = [=]
                 {
                     auto copy = obj;
-                    mut(fn) = {nontype<&A::add>, &copy};
+                    mut(fn) = {cw<&A::add>, &copy};
 
                     then("you can observe reference semantics too") = [&]
                     {
@@ -63,7 +63,7 @@ suite nttp_callable = []
 
                 when("rebinding the same memfn and an object") = [=]
                 {
-                    mut(fn) = {nontype<&A::add>, obj};
+                    mut(fn) = {cw<&A::add>, obj};
 
                     then("you can observe value semantics instead") = [&]
                     {
@@ -75,7 +75,7 @@ suite nttp_callable = []
 
             when("binding a free function to a reference") = [=]() mutable
             {
-                function fn{nontype<neg>, std::cref(obj)};
+                function fn{cw<neg>, std::cref(obj)};
 
                 then("you can observe reference semantics") = [&]
                 {
@@ -88,7 +88,7 @@ suite nttp_callable = []
                 when("rebinding a pointer-to-data-member to a reference") = [=]
                 {
                     auto copy = obj;
-                    mut(fn) = {nontype<&A::val>, std::ref(copy)};
+                    mut(fn) = {cw<&A::val>, std::ref(copy)};
 
                     then("you can observe reference semantics too") = [&]
                     {
@@ -105,7 +105,7 @@ suite nttp_callable = []
                          "object share states") = [&]
                     {
                         auto ptr = std::make_shared<A>(6);
-                        mut(fn) = {nontype<&A::val>, ptr};
+                        mut(fn) = {cw<&A::val>, ptr};
 
                         expect(fn() == 6_i);
 
@@ -117,7 +117,7 @@ suite nttp_callable = []
                          "are distinct") = [&]
                     {
                         auto opt = std::make_optional<A>(6);
-                        mut(fn) = {nontype<&A::val>, opt};
+                        mut(fn) = {cw<&A::val>, opt};
 
                         expect(fn() == 6_i);
 
@@ -129,7 +129,7 @@ suite nttp_callable = []
                 when("rebinding a stateless closure to a copy") = [=]() mutable
                 {
                     obj = {};
-                    fn = {nontype<[](A &obj) { return ++obj.val; }>, obj};
+                    fn = {cw<[](A &obj) { return ++obj.val; }>, obj};
 
                     then("you can observe value semantics") = [&]
                     {
@@ -143,7 +143,7 @@ suite nttp_callable = []
                 test("non-member does not dereference pointers") = [=]() mutable
                 {
                     obj = {};
-                    fn = {nontype<[](A *obj) { return ++obj->val; }>, &obj};
+                    fn = {cw<[](A *obj) { return ++obj->val; }>, &obj};
 
                     then("observe reference semantics as requested") = [&]
                     {
@@ -161,7 +161,7 @@ suite nttp_callable = []
     {
         given("a function pointer NTTP") = [obj = A{6}]
         {
-            function fn = nontype<neg>;
+            function fn = cw<neg>;
 
             then("the signature is copied") = [&]
             {
@@ -171,7 +171,7 @@ suite nttp_callable = []
 
             then("you can rebind a pointer-to-member") = [=]
             {
-                mut(fn) = nontype<&A::val>;
+                mut(fn) = cw<&A::val>;
 
                 expect(fn({-3}) == -3_i);
                 expect(fn(obj) == 6_i);
@@ -182,50 +182,52 @@ suite nttp_callable = []
 
 using T = function<int(int)>;
 
-static_assert(std::is_constructible_v<T, nontype_t<&A::add>, A>);
-static_assert(std::is_constructible_v<T, nontype_t<&A::add>, A const>,
+static_assert(std::is_constructible_v<T, constant_wrapper<&A::add>, A>);
+static_assert(std::is_constructible_v<T, constant_wrapper<&A::add>, A const>,
               "function<S> does not call the source object");
 static_assert(not std::is_invocable_v<decltype(&A::add), A const>);
 
-static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::add>, A *>);
-static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::add>,
+static_assert(
+    std::is_nothrow_constructible_v<T, constant_wrapper<&A::add>, A *>);
+static_assert(std::is_nothrow_constructible_v<T, constant_wrapper<&A::add>,
                                               std::reference_wrapper<A>>);
-static_assert(not std::is_constructible_v<T, nontype_t<&A::add>, A const *>,
-              "...unless we stored a pointer");
-static_assert(not std::is_constructible_v<T, nontype_t<&A::add>,
+static_assert(
+    not std::is_constructible_v<T, constant_wrapper<&A::add>, A const *>,
+    "...unless we stored a pointer");
+static_assert(not std::is_constructible_v<T, constant_wrapper<&A::add>,
                                           std::reference_wrapper<A const>>,
               "...or reference_wrapper");
 
 using V = function<void(int)>;
 
 inline constexpr auto pure = [](A &, int) { return 0; };
-static_assert(std::is_constructible_v<V, nontype_t<pure>, A const &>,
+static_assert(std::is_constructible_v<V, constant_wrapper<pure>, A const &>,
               "function has its own copy of target object");
 static_assert(not std::is_invocable_v<decltype(pure), A const &, int>);
 
 inline constexpr auto rvalue_only = [](A &&, int) { return 0; };
-static_assert(not std::is_constructible_v<V, nontype_t<rvalue_only>, A>,
+static_assert(not std::is_constructible_v<V, constant_wrapper<rvalue_only>, A>,
               "function's target object is used as an lvalue");
 static_assert(std::is_invocable_v<decltype(rvalue_only), A, int>);
 
-static_assert(std::is_constructible_v<V, nontype_t<&A::set>, A &>);
-static_assert(std::is_constructible_v<V, nontype_t<&A::set>, A *>);
-static_assert(std::is_constructible_v<V, nontype_t<pure>, A &>);
-static_assert(not std::is_constructible_v<V, nontype_t<pure>, A *>,
+static_assert(std::is_constructible_v<V, constant_wrapper<&A::set>, A &>);
+static_assert(std::is_constructible_v<V, constant_wrapper<&A::set>, A *>);
+static_assert(std::is_constructible_v<V, constant_wrapper<pure>, A &>);
+static_assert(not std::is_constructible_v<V, constant_wrapper<pure>, A *>,
               "do not call a closure through a pointer to first arg");
 
 using U = function<int()>;
 
-static_assert(std::is_constructible_v<U, nontype_t<&A::val>, A const>);
-static_assert(std::is_constructible_v<U, nontype_t<&A::val>, A const *>);
-static_assert(std::is_constructible_v<U, nontype_t<neg>, A const>);
-static_assert(not std::is_constructible_v<U, nontype_t<neg>, A const *>,
+static_assert(std::is_constructible_v<U, constant_wrapper<&A::val>, A const>);
+static_assert(std::is_constructible_v<U, constant_wrapper<&A::val>, A const *>);
+static_assert(std::is_constructible_v<U, constant_wrapper<neg>, A const>);
+static_assert(not std::is_constructible_v<U, constant_wrapper<neg>, A const *>,
               "do not call a free function through a pointer to first arg");
 
 using W = function<int(A)>;
 
-static_assert(std::is_nothrow_constructible_v<W, nontype_t<&A::val>>);
-static_assert(std::is_nothrow_constructible_v<W, nontype_t<neg>>,
+static_assert(std::is_nothrow_constructible_v<W, constant_wrapper<&A::val>>);
+static_assert(std::is_nothrow_constructible_v<W, constant_wrapper<neg>>,
               "unbounded cases are always noexcept");
-static_assert(std::is_nothrow_assignable_v<W, nontype_t<&A::val>>);
-static_assert(std::is_nothrow_assignable_v<W, nontype_t<neg>>);
+static_assert(std::is_nothrow_assignable_v<W, constant_wrapper<&A::val>>);
+static_assert(std::is_nothrow_assignable_v<W, constant_wrapper<neg>>);

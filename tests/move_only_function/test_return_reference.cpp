@@ -55,21 +55,20 @@ suite return_reference = []
             when("used as an unbound method") = [&]
             {
                 move_only_function<int &(refwrap<int> const &)> fn =
-                    nontype<&refwrap<int>::get>;
+                    cw<&refwrap<int>::get>;
                 expect(std::addressof(fn(obj)) == &x);
             };
 
             when("used as a non-const bound method") = [&]
             {
-                move_only_function<int &()> fn = {nontype<&refwrap<int>::get>,
-                                                  obj};
+                move_only_function<int &()> fn = {cw<&refwrap<int>::get>, obj};
                 expect(std::addressof(fn()) == &x);
             };
 
             when("used as a const bound method") = [&]
             {
-                move_only_function<int &() const> fn = {
-                    nontype<&refwrap<int>::get>, obj};
+                move_only_function<int &() const> fn = {cw<&refwrap<int>::get>,
+                                                        obj};
                 expect(std::addressof(fn()) == &x);
             };
         };

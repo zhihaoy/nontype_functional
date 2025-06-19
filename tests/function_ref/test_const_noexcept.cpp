@@ -51,11 +51,11 @@ suite const_noexcept_qualified = []
 
             then("pointer to data member is deemed a pure accessor") = [&]
             {
-                expect(call({nontype<&A::data>, a}) == 99_i);
-                expect(call({nontype<&A::data>, &a}) == 99_i);
+                expect(call({cw<&A::data>, a}) == 99_i);
+                expect(call({cw<&A::data>, &a}) == 99_i);
 
                 std::reference_wrapper r = a;
-                expect(call({nontype<&A::data>, r}) == 99_i);
+                expect(call({cw<&A::data>, r}) == 99_i);
             };
         };
 
@@ -65,14 +65,12 @@ suite const_noexcept_qualified = []
 
             then("can call const member function") = [&]
             {
-                expect(call({nontype<&A_nice::h>, w}) == ch<'h'>);
-                expect(call({nontype<&A_nice::h>, &w}) == ch<'h'>);
+                expect(call({cw<&A_nice::h>, w}) == ch<'h'>);
+                expect(call({cw<&A_nice::h>, &w}) == ch<'h'>);
             };
 
-            then("can call const member function on const lvalue") = [&] {
-                expect(call({nontype<&A_nice::h>, std::as_const(w)}) ==
-                       ch<'h'>);
-            };
+            then("can call const member function on const lvalue") = [&]
+            { expect(call({cw<&A_nice::h>, std::as_const(w)}) == ch<'h'>); };
         };
     };
 };
@@ -88,20 +86,20 @@ static_assert(
 
 using U = function_ref<int() const noexcept>;
 
-static_assert(not std::is_constructible_v<U, nontype_t<&A::data>, A>,
+static_assert(not std::is_constructible_v<U, constant_wrapper<&A::data>, A>,
               "cannot bind rvalue");
 
-static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A &>,
+static_assert(not std::is_constructible_v<U, constant_wrapper<&A::g>, A &>,
               "not qualified");
-static_assert(not std::is_constructible_v<U, nontype_t<&A::k>, A &>,
+static_assert(not std::is_constructible_v<U, constant_wrapper<&A::k>, A &>,
               "not noexcept-qualified");
-static_assert(not std::is_constructible_v<U, nontype_t<&A_nice::g>, A_nice &>,
+static_assert(not std::is_constructible_v<U, constant_wrapper<&A_nice::g>, A_nice &>,
               "not const-qualified");
 
-static_assert(not std::is_constructible_v<U, nontype_t<&A_nice::h>, A_nice>,
+static_assert(not std::is_constructible_v<U, constant_wrapper<&A_nice::h>, A_nice>,
               "cannot bind rvalue");
 
-static_assert(not std::is_constructible_v<U, nontype_t<h>, A &>,
+static_assert(not std::is_constructible_v<U, constant_wrapper<h>, A &>,
               "not noexcept");
 int h_good(A) noexcept;
-static_assert(std::is_constructible_v<U, nontype_t<h_good>, A &>);
+static_assert(std::is_constructible_v<U, constant_wrapper<h_good>, A &>);

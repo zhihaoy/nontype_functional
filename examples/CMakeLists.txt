@@ -3,6 +3,8 @@ project(std23-functional-examples CXX)
 
 find_package(nontype_functional 1.0 CONFIG)
 
+set(CMAKE_CXX_STANDARD 26)
+
 add_library(examples OBJECT)
 target_sources(examples PRIVATE
  "listing_1.cpp"

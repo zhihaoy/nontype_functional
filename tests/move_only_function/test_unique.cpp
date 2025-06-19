@@ -68,7 +68,7 @@ suite unique_callable = []
     {
         given("a move_only_function storing a unique_ptr") = []
         {
-            T fn(nontype<&inlined_fixed_string::slice>,
+            T fn(cw<&inlined_fixed_string::slice>,
                  inlined_fixed_string::make_unique("coffee engineering"sv));
 
             when("calling the wrapper") = [&]
@@ -86,7 +86,7 @@ suite unique_callable = []
 
         given("a move_only_function in-place constructed a unique_ptr") = []
         {
-            T fn(nontype<&inlined_fixed_string::slice>,
+            T fn(cw<&inlined_fixed_string::slice>,
                  std::in_place_type<std::unique_ptr<inlined_fixed_string>>,
                  inlined_fixed_string::make("destroying delete"sv));
 
@@ -102,19 +102,19 @@ suite unique_callable = []
 };
 
 static_assert(
-    std::is_constructible_v<T, nontype_t<&inlined_fixed_string::slice>,
+    std::is_constructible_v<T, constant_wrapper<&inlined_fixed_string::slice>,
                             std::unique_ptr<inlined_fixed_string>>);
-static_assert(
-    not std::is_constructible_v<T, nontype_t<&inlined_fixed_string::slice>,
-                                std::unique_ptr<inlined_fixed_string> &>,
-    "users cannot construct the same wrapper from an lvalue");
+static_assert(not std::is_constructible_v<
+                  T, constant_wrapper<&inlined_fixed_string::slice>,
+                  std::unique_ptr<inlined_fixed_string> &>,
+              "users cannot construct the same wrapper from an lvalue");
 
 static_assert(std::is_constructible_v<
-              T, nontype_t<&inlined_fixed_string::slice>,
+              T, constant_wrapper<&inlined_fixed_string::slice>,
               std::in_place_type_t<std::unique_ptr<inlined_fixed_string>>,
               inlined_fixed_string *>);
 static_assert(not std::is_constructible_v<
-                  T, nontype_t<&inlined_fixed_string::slice>,
+                  T, constant_wrapper<&inlined_fixed_string::slice>,
                   std::in_place_type_t<std::unique_ptr<inlined_fixed_string>>,
                   std::unique_ptr<inlined_fixed_string> &>,
               "move-only type cannot be in-place constructed from lvalue");

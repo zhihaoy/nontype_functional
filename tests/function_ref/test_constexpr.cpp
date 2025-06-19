@@ -15,15 +15,15 @@ struct B
 
 constexpr int constexpr_test1()
 {
-    function_ref<int()> fr = nontype<f>;
-    fr = nontype<cf>; // cf is a constexpr function
+    function_ref<int()> fr = cw<f>;
+    fr = cw<cf>; // cf is a constexpr function
     return fr();
 }
 
 constexpr int constexpr_test2()
 {
     B b;
-    function_ref<int(B)> fmr = nontype<&B::data>;
+    function_ref<int(B)> fmr = cw<&B::data>;
     return fmr(b);
 }
 

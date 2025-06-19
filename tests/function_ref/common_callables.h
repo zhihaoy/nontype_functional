@@ -10,9 +10,9 @@
 #define BODYN(n) ((::boost::ut::log << __PRETTY_FUNCTION__ << '\n'), n)
 #endif
 
+using std23::constant_wrapper;
+using std23::cw;
 using std23::function_ref;
-using std23::nontype;
-using std23::nontype_t;
 
 using namespace boost::ut;
 

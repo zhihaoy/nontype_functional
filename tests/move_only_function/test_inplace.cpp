@@ -138,8 +138,8 @@ suite inplace = []
             given("a type with user-defined ctors") = []
             {
                 move_only_function<std::string()> fn(
-                    nontype<[](std::vector<double> &v)
-                            { return std::to_string(v.size()); }>,
+                    cw<[](std::vector<double> &v)
+                       { return std::to_string(v.size()); }>,
                     in_place_type<std::vector<double>>, 4u);
 
                 then("in-place construct") = [&] { expect(fn() == "4"sv); };
@@ -148,7 +148,7 @@ suite inplace = []
             given("a type with a initializer_list ctor") = []
             {
                 move_only_function<int()> fn(
-                    nontype<[](std::string const &s) { return std::stoi(s); }>,
+                    cw<[](std::string const &s) { return std::stoi(s); }>,
                     in_place_type<std::string>, {'5', '9', '2', '\0'});
 
                 then("passing braced-init-list") = [&]
@@ -169,9 +169,9 @@ using W = move_only_function<int()>;
 using Vec = std::vector<double>;
 
 // extension
-static_assert(
-    std::is_nothrow_constructible_v<W, nontype_t<[](Vec *) { return 0; }>,
-                                    std23::in_place_type_t<Vec *>>);
 static_assert(std::is_nothrow_constructible_v<
-              W, nontype_t<[](Vec &) { return 0; }>,
+              W, constant_wrapper<[](Vec *) { return 0; }>,
+              std23::in_place_type_t<Vec *>>);
+static_assert(std::is_nothrow_constructible_v<
+              W, constant_wrapper<[](Vec &) { return 0; }>,
               std23::in_place_type_t<std::reference_wrapper<Vec>>, Vec &>);

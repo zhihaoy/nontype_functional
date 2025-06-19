@@ -140,56 +140,64 @@ class function_ref<Sig, R(Args...)> // freestanding
     template<class T>
     function_ref &operator=(T)
         requires(_is_not_self<T, function_ref> and not std::is_pointer_v<T> and
-                 _is_not_nontype_t<T>)
+                 _is_not_constant_wrapper_t<T>)
         = delete;
 
     template<auto f>
-    constexpr function_ref(nontype_t<f>) noexcept
-        requires is_invocable_using<decltype(f)>
+    constexpr function_ref(constant_wrapper<f> fn) noexcept
+        requires is_invocable_using<typename constant_wrapper<f>::value_type>
         : fptr_(
-              [](storage, _param_t<Args>... args) noexcept(noex) -> R {
+              [](storage, _param_t<Args>... args) noexcept(noex) -> R
+              {
                   return std23::invoke_r<R>(
-                      f, static_cast<decltype(args)>(args)...);
+                      constant_wrapper<f>::value,
+                      static_cast<decltype(args)>(args)...);
               })
     {
-        using F = decltype(f);
+        using F = constant_wrapper<f>::value_type;
         if constexpr (std::is_pointer_v<F> or std::is_member_pointer_v<F>)
-            static_assert(f != nullptr, "NTTP callable must be usable");
+            static_assert(constant_wrapper<f>::value != nullptr,
+                          "NTTP callable must be usable");
     }
 
     template<auto f, class U, class T = std::remove_reference_t<U>>
-    constexpr function_ref(nontype_t<f>, U &&obj) noexcept
+    constexpr function_ref(constant_wrapper<f>, U &&obj) noexcept
         requires(not std::is_rvalue_reference_v<U &&> and
-                 is_invocable_using<decltype(f), cvref<T>>)
+                 is_invocable_using<typename constant_wrapper<f>::value_type,
+                                    cvref<T>>)
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex) -> R
               {
                   cvref<T> obj = *get<T>(this_);
                   return std23::invoke_r<R>(
-                      f, obj, static_cast<decltype(args)>(args)...);
+                      constant_wrapper<f>::value, obj,
+                      static_cast<decltype(args)>(args)...);
               }),
           obj_(std::addressof(obj))
     {
-        using F = decltype(f);
+        using F = constant_wrapper<f>::value_type;
         if constexpr (std::is_pointer_v<F> or std::is_member_pointer_v<F>)
-            static_assert(f != nullptr, "NTTP callable must be usable");
+            static_assert(constant_wrapper<f>::value != nullptr,
+                          "NTTP callable must be usable");
     }
 
     template<auto f, class T>
-    constexpr function_ref(nontype_t<f>, cv<T> *obj) noexcept
-        requires is_invocable_using<decltype(f), decltype(obj)>
+    constexpr function_ref(constant_wrapper<f>, cv<T> *obj) noexcept
+        requires is_invocable_using<typename constant_wrapper<f>::value_type,
+                                    decltype(obj)>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex) -> R
               {
                   return std23::invoke_r<R>(
-                      f, get<cv<T>>(this_),
+                      constant_wrapper<f>::value, get<cv<T>>(this_),
                       static_cast<decltype(args)>(args)...);
               }),
           obj_(obj)
     {
-        using F = decltype(f);
+        using F = constant_wrapper<f>::value_type;
         if constexpr (std::is_pointer_v<F> or std::is_member_pointer_v<F>)
-            static_assert(f != nullptr, "NTTP callable must be usable");
+            static_assert(constant_wrapper<f>::value != nullptr,
+                          "NTTP callable must be usable");
 
         if constexpr (std::is_member_pointer_v<F>)
             assert(obj != nullptr && "must reference an object");
@@ -205,11 +213,14 @@ template<class F> requires std::is_function_v<F>
 function_ref(F *) -> function_ref<F>;
 
 template<auto V>
-function_ref(nontype_t<V>) -> function_ref<_adapt_signature_t<decltype(V)>>;
+function_ref(constant_wrapper<V>)
+    -> function_ref<
+        _adapt_signature_t<typename constant_wrapper<V>::value_type>>;
 
 template<auto V, class T>
-function_ref(nontype_t<V>, T &&)
-    -> function_ref<_drop_first_arg_to_invoke_t<decltype(V), T &>>;
+function_ref(constant_wrapper<V>, T &&)
+    -> function_ref<_drop_first_arg_to_invoke_t<
+        typename constant_wrapper<V>::value_type, T &>>;
 
 } // namespace std23
 

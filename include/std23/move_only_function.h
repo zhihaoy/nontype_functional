@@ -364,25 +364,32 @@ class move_only_function<S, R(Args...)>
     }
 
     template<auto f>
-    move_only_function(nontype_t<f>) noexcept
-        requires is_invocable_using<decltype(f)>
-        : vtbl_(trait::template unbound_callable_target<f>)
+    move_only_function(constant_wrapper<f>) noexcept
+        requires is_invocable_using<typename constant_wrapper<f>::value_type>
+        : vtbl_(trait::template unbound_callable_target<
+                constant_wrapper<f>::value>)
     {}
 
     template<auto f, class T, class VT = std::decay_t<T>>
-    move_only_function(nontype_t<f>, T &&x) noexcept(
+    move_only_function(constant_wrapper<f>, T &&x) noexcept(
         std::is_nothrow_invocable_v<decltype(_take_reference), T>)
-        requires is_callable_as_if_from<f, VT> and
+        requires is_callable_as_if_from<constant_wrapper<f>::value, VT> and
                      std::is_constructible_v<VT, T>
-        : vtbl_(trait::template bound_callable_target<
-                f, std::unwrap_ref_decay_t<T>, inv_quals_f>),
+        : vtbl_(
+              trait::template bound_callable_target<constant_wrapper<f>::value,
+                                                    std::unwrap_ref_decay_t<T>,
+                                                    inv_quals_f>),
           obj_(_take_reference(std::forward<T>(x)))
     {}
 
     template<class M, class C, M C::*f, class T>
-    move_only_function(nontype_t<f>, std::unique_ptr<T> &&x) noexcept
-        requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *>
-        : vtbl_(trait::template boxed_callable_target<f, T>), obj_(x.release())
+    move_only_function(constant_wrapper<f>, std::unique_ptr<T> &&x) noexcept
+        requires std::is_base_of_v<C, T> and
+                     is_callable_as_if_from<constant_wrapper<f>::value, T *>
+        : vtbl_(
+              trait::template boxed_callable_target<constant_wrapper<f>::value,
+                                                    T>),
+          obj_(x.release())
     {}
 
     template<class T, class... Inits>
@@ -411,40 +418,44 @@ class move_only_function<S, R(Args...)>
     }
 
     template<auto f, class T, class... Inits>
-    explicit move_only_function(nontype_t<f>, in_place_type_t<T>,
+    explicit move_only_function(constant_wrapper<f>, in_place_type_t<T>,
                                 Inits &&...inits) noexcept( //
         std::is_nothrow_invocable_v<decltype(_build_reference<T>), Inits...>)
-        requires is_callable_as_if_from<f, T> and
+        requires is_callable_as_if_from<constant_wrapper<f>::value, T> and
                      std::is_constructible_v<T, Inits...>
-        : vtbl_(trait::template bound_callable_target<
-                f, std::unwrap_reference_t<T>, inv_quals_f>),
+        : vtbl_(
+              trait::template bound_callable_target<constant_wrapper<f>::value,
+                                                    std::unwrap_reference_t<T>,
+                                                    inv_quals_f>),
           obj_(_build_reference<T>(std::forward<Inits>(inits)...))
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);
     }
 
     template<class M, class C, M C::*f, class T, class... Inits>
-    explicit move_only_function(nontype_t<f> t,
+    explicit move_only_function(constant_wrapper<f>,
                                 in_place_type_t<std::unique_ptr<T>>,
                                 Inits &&...inits) noexcept( //
         std::is_nothrow_constructible_v<std::unique_ptr<T>, Inits...>)
-        requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *> and
-                 std::is_constructible_v<std::unique_ptr<T>,
-                                         Inits...>
-        : move_only_function(t,
+        requires std::is_base_of_v<C, T> and
+                 is_callable_as_if_from<constant_wrapper<f>::value, T *> and
+                 std::is_constructible_v<std::unique_ptr<T>, Inits...>
+        : move_only_function(constant_wrapper<f>::value,
                              std::unique_ptr<T>(std::forward<Inits>(inits)...))
     {}
 
     template<auto f, class T, class U, class... Inits>
-    explicit move_only_function(nontype_t<f>, in_place_type_t<T>,
+    explicit move_only_function(constant_wrapper<f>, in_place_type_t<T>,
                                 initializer_list<U> ilist,
                                 Inits &&...inits) noexcept( //
         std::is_nothrow_invocable_v<decltype(_build_reference<T>),
                                     decltype((ilist)), Inits...>)
-        requires is_callable_as_if_from<f, T> and
+        requires is_callable_as_if_from<constant_wrapper<f>::value, T> and
                      std::is_constructible_v<T, decltype((ilist)), Inits...>
-        : vtbl_(trait::template bound_callable_target<
-                f, std::unwrap_reference_t<T>, inv_quals_f>),
+        : vtbl_(
+              trait::template bound_callable_target<constant_wrapper<f>::value,
+                                                    std::unwrap_reference_t<T>,
+                                                    inv_quals_f>),
           obj_(_build_reference<T>(ilist, std::forward<Inits>(inits)...))
     {
         static_assert(std::is_same_v<std::decay_t<T>, T>);

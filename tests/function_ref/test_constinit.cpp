@@ -7,8 +7,8 @@ static C c;
 constinit function_ref<int()> cb{c};
 
 static A a;
-constinit function_ref<int()> cb_memref{nontype<&A::k>, a};
-constinit function_ref<int()> cb_memptr{nontype<&A::k>, &a};
+constinit function_ref<int()> cb_memref{cw<&A::k>, a};
+constinit function_ref<int()> cb_memptr{cw<&A::k>, &a};
 
 suite constant_initialized = []
 {

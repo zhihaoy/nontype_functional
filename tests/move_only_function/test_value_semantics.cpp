@@ -104,8 +104,8 @@ static_assert(std::is_constructible_v<T, reject_rvalue &>);
 static_assert(not std::is_constructible_v<T, reject_rvalue>,
               "target object must be initialized");
 
-static_assert(
-    std::is_constructible_v<T, nontype_t<&reject_rvalue::mf>, reject_rvalue &>);
-static_assert(not std::is_constructible_v<T, nontype_t<&reject_rvalue::mf>,
-                                          reject_rvalue>,
+static_assert(std::is_constructible_v<T, constant_wrapper<&reject_rvalue::mf>,
+                                      reject_rvalue &>);
+static_assert(not std::is_constructible_v<
+                  T, constant_wrapper<&reject_rvalue::mf>, reject_rvalue>,
               "bounded target object must be initialized");

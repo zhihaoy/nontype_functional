@@ -22,7 +22,7 @@ endif()
 include(CTest)
 include(CMakePackageConfigHelpers)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
@@ -40,13 +40,11 @@ endif()
 add_library(nontype_functional INTERFACE)
 add_library(std23::nontype_functional ALIAS nontype_functional)
 target_sources(nontype_functional INTERFACE
+ "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/std23/constant_wrapper.hpp>"
  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/std23/function_ref.h>"
- "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/std23/function.h>"
- "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/std23/move_only_function.h>"
  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/std23/__functional_base.h>"
+ "$<INSTALL_INTERFACE:include/std23/constant_wrapper.hpp>"
  "$<INSTALL_INTERFACE:include/std23/function_ref.h>"
- "$<INSTALL_INTERFACE:include/std23/function.h>"
- "$<INSTALL_INTERFACE:include/std23/move_only_function.h>"
  "$<INSTALL_INTERFACE:include/std23/__functional_base.h>"
 )
 target_include_directories(nontype_functional

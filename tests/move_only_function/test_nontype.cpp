@@ -16,7 +16,7 @@ suite nttp_callable = []
 
             when("binding a pointer-to-member to a pointer to the object") = [&]
             {
-                T fn = {nontype<&A::data>, &obj.value()};
+                T fn = {cw<&A::data>, &obj.value()};
 
                 then("you can observe reference semantics") = [&]
                 {
@@ -26,7 +26,7 @@ suite nttp_callable = []
 
                 when("rebinding a copy of the object") = [&]
                 {
-                    fn = {nontype<&A::data>, obj};
+                    fn = {cw<&A::data>, obj};
 
                     then("you can observe value semantics instead") = [&]
                     {
@@ -34,16 +34,19 @@ suite nttp_callable = []
                         expect(fn() == 27_i);
                     };
 
-                    static_assert(std::is_constructible_v<T, nontype_t<h>,
-                                                          decltype(*obj)>);
                     static_assert(
-                        not std::is_constructible_v<T, nontype_t<h>,
+                        std::is_constructible_v<T, constant_wrapper<h>,
+                                                decltype(*obj)>);
+                    static_assert(
+                        not std::is_constructible_v<T, constant_wrapper<h>,
                                                     decltype(obj)>,
                         "non-member does not dereference pointer-like objects");
                     using U = decltype(obj);
                     static_assert(
                         std::is_constructible_v<
-                            T, nontype_t<[](U const &x) { return h(*x); }>, U>,
+                            T,
+                            constant_wrapper<[](U const &x) { return h(*x); }>,
+                            U>,
                         "...but you can DIY");
                 };
             };
@@ -59,7 +62,7 @@ suite nttp_callable = []
 
             when("move_only_function is assigned a pointer-to-member") = [&]
             {
-                fn = nontype<&A::data>;
+                fn = cw<&A::data>;
 
                 then("it behaves as if it is memfn") = [&]
                 {
@@ -70,7 +73,7 @@ suite nttp_callable = []
 
             when("move_only_function is assigned a function") = [&]
             {
-                fn = nontype<h>;
+                fn = cw<h>;
 
                 then("it behaves as if it is the function") = [&]
                 { expect(fn(obj) == free_function); };
@@ -81,19 +84,20 @@ suite nttp_callable = []
 
 using U = move_only_function<int(A)>;
 
-static_assert(std::is_nothrow_constructible_v<U, nontype_t<&A::data>>);
-static_assert(std::is_nothrow_constructible_v<U, nontype_t<h>>,
+static_assert(std::is_nothrow_constructible_v<U, constant_wrapper<&A::data>>);
+static_assert(std::is_nothrow_constructible_v<U, constant_wrapper<h>>,
               "unbounded cases are always noexcept");
-static_assert(std::is_nothrow_assignable_v<U, nontype_t<&A::data>>);
-static_assert(std::is_nothrow_assignable_v<U, nontype_t<h>>);
+static_assert(std::is_nothrow_assignable_v<U, constant_wrapper<&A::data>>);
+static_assert(std::is_nothrow_assignable_v<U, constant_wrapper<h>>);
 
-static_assert(std::is_constructible_v<T, nontype_t<&A::data>, A>);
-static_assert(std::is_constructible_v<T, nontype_t<h>, A>,
+static_assert(std::is_constructible_v<T, constant_wrapper<&A::data>, A>);
+static_assert(std::is_constructible_v<T, constant_wrapper<h>, A>,
               "initializing bounded objects potentially throws");
 
 // extension
-static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::data>, A *>,
-              "...unless we stored a pointer");
-static_assert(std::is_nothrow_constructible_v<T, nontype_t<&A::data>,
+static_assert(
+    std::is_nothrow_constructible_v<T, constant_wrapper<&A::data>, A *>,
+    "...unless we stored a pointer");
+static_assert(std::is_nothrow_constructible_v<T, constant_wrapper<&A::data>,
                                               std::reference_wrapper<A>>,
               "...or reference_wrapper");
