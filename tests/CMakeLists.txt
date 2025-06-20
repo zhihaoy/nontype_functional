@@ -8,4 +8,5 @@ target_include_directories(kris-ut
 target_compile_definitions(kris-ut INTERFACE BOOST_UT_DISABLE_MODULE)
 
 add_subdirectory(function_ref)
-
+add_subdirectory(move_only_function)
+add_subdirectory(function)

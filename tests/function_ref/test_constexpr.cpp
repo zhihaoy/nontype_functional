@@ -30,4 +30,12 @@ constexpr int constexpr_test2()
 static_assert(constexpr_test1() == 2);
 static_assert(constexpr_test2() == 101);
 
+constexpr int f()
+{
+    return 42;
+}
+
+constexpr std23::function_ref<int()> r = std23::cw<f>;
+static_assert(r() == 42);
+
 } // namespace

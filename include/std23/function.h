@@ -352,13 +352,13 @@ function(T) -> function<_strip_noexcept_t<
 
 template<auto V>
 function(constant_wrapper<V>)
-    -> function<
-        _strip_noexcept_t<_adapt_signature_t<constant_wrapper<V>::value_type>>>;
+    -> function<_strip_noexcept_t<
+        _adapt_signature_t<typename constant_wrapper<V>::value_type>>>;
 
 template<auto V, class T>
 function(constant_wrapper<V>, T)
-    -> function<_strip_noexcept_t<
-        _drop_first_arg_to_invoke_t<constant_wrapper<V>::value_type, T>>>;
+    -> function<_strip_noexcept_t<_drop_first_arg_to_invoke_t<
+        typename constant_wrapper<V>::value_type, T>>>;
 
 } // namespace std23
 
