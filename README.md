@@ -21,7 +21,7 @@ The implementation does not guarantee the best performance under all use cases b
 
 | Toolset              | Standard Library | Test Environment   |
 | -------------------- | ---------------- | ------------------ |
-| GCC >= 11.1.0        | libstdc++        | Ubuntu 20.04       |
+| GCC >= 11.1.0        | libstdc++        | Ubuntu 22.04       |
 | MSVC >= 14.30        | Microsoft STL    | Visual Studio 2022 |
 | Clang >= 17.0.6      | libc++           | Xcode 16.0         |
 
