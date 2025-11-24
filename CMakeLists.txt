@@ -53,7 +53,33 @@ target_include_directories(nontype_functional
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
               $<INSTALL_INTERFACE:include>
 )
-target_compile_features(nontype_functional INTERFACE cxx_std_20)
+
+macro(clang_affected_by_issue_120812 out_var)
+    set(${out_var} FALSE)
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "18.0")
+            set(${out_var} TRUE)
+        endif()
+
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        # AppleClang version mapping:
+        # 1700 -> LLVM 19
+        # 1600 -> LLVM 17
+
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "1700")
+            set(${out_var} TRUE)
+        endif()
+    endif()
+endmacro()
+
+clang_affected_by_issue_120812(_WANTS_CXX23)
+
+if(_WANTS_CXX23)
+    target_compile_features(nontype_functional INTERFACE cxx_std_23)
+else()
+    target_compile_features(nontype_functional INTERFACE cxx_std_20)
+endif()
 
 if(PROJECT_IS_TOP_LEVEL)
     set(_version_filename "nontype_functional-config-version.cmake")
