@@ -67,7 +67,7 @@ macro(clang_affected_by_issue_120812 out_var)
         # 1700 -> LLVM 19
         # 1600 -> LLVM 17
 
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "1700")
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "17.0")
             set(${out_var} TRUE)
         endif()
     endif()
@@ -76,6 +76,7 @@ endmacro()
 clang_affected_by_issue_120812(_WANTS_CXX23)
 
 if(_WANTS_CXX23)
+    message(INFO "Switching to C++23 mode")
     target_compile_features(nontype_functional INTERFACE cxx_std_23)
 else()
     target_compile_features(nontype_functional INTERFACE cxx_std_20)
