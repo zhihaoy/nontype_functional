@@ -145,9 +145,10 @@ class function_ref<Sig, R(Args...)> // freestanding
 
     template<auto f>
     constexpr function_ref(nontype_t<f>) noexcept
-        requires is_invocable_using<decltype(f)>
+        requires is_invocable_using<decltype((f))>
         : fptr_(
-              [](storage, _param_t<Args>... args) noexcept(noex) -> R {
+              [](storage, _param_t<Args>... args) noexcept(noex) -> R
+              {
                   return std23::invoke_r<R>(
                       f, static_cast<decltype(args)>(args)...);
               })
@@ -160,7 +161,7 @@ class function_ref<Sig, R(Args...)> // freestanding
     template<auto f, class U, class T = std::remove_reference_t<U>>
     constexpr function_ref(nontype_t<f>, U &&obj) noexcept
         requires(not std::is_rvalue_reference_v<U &&> and
-                 is_invocable_using<decltype(f), cvref<T>>)
+                 is_invocable_using<decltype((f)), cvref<T>>)
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex) -> R
               {
@@ -177,7 +178,7 @@ class function_ref<Sig, R(Args...)> // freestanding
 
     template<auto f, class T>
     constexpr function_ref(nontype_t<f>, cv<T> *obj) noexcept
-        requires is_invocable_using<decltype(f), decltype(obj)>
+        requires is_invocable_using<decltype((f)), decltype(obj)>
         : fptr_(
               [](storage this_, _param_t<Args>... args) noexcept(noex) -> R
               {
