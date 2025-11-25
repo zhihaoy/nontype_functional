@@ -212,7 +212,7 @@ struct _drop_first_arg_to_invoke<R (*)(G, Args...) noexcept, T>
 template<class T, class M, class G> requires std::is_object_v<M>
 struct _drop_first_arg_to_invoke<M G::*, T>
 {
-    using type = std::invoke_result_t<M G::*, T>();
+    using type = std::invoke_result_t<M G::*, T>() noexcept;
 };
 
 template<class T, class M, class G> requires std::is_function_v<M>

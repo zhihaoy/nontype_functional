@@ -65,11 +65,13 @@ void test_ctad()
     {
         A a;
         auto fr = function_ref(nontype<&A::data>, &a);
-        static_assert(std::is_same_v<decltype(fr), function_ref<int &()>>);
+        static_assert(
+            std::is_same_v<decltype(fr), function_ref<int &() noexcept>>);
 
         auto fc = function_ref(nontype<&A::data>, std::as_const(a));
-        static_assert(std::is_same_v<decltype(fc), function_ref<int const &()>>,
-                      "type to retrieve data member depends on object");
+        static_assert(
+            std::is_same_v<decltype(fc), function_ref<int const &() noexcept>>,
+            "type to retrieve data member depends on object");
     }
 
     {
