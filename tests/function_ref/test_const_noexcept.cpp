@@ -69,7 +69,8 @@ suite const_noexcept_qualified = []
                 expect(call({nontype<&A_nice::h>, &w}) == ch<'h'>);
             };
 
-            then("can call const member function on const lvalue") = [&] {
+            then("can call const member function on const lvalue") = [&]
+            {
                 expect(call({nontype<&A_nice::h>, std::as_const(w)}) ==
                        ch<'h'>);
             };
@@ -86,6 +87,7 @@ static_assert(
                             decltype([i = 0]() mutable noexcept { return i; })>,
     "const noexcept signature does not accept noexcept but mutable lambda");
 
+using T = function_ref<int() const>;
 using U = function_ref<int() const noexcept>;
 
 static_assert(not std::is_constructible_v<U, nontype_t<&A::data>, A>,
@@ -105,3 +107,11 @@ static_assert(not std::is_constructible_v<U, nontype_t<h>, A &>,
               "not noexcept");
 int h_good(A) noexcept;
 static_assert(std::is_constructible_v<U, nontype_t<h_good>, A &>);
+
+static_assert(not std::is_convertible_v<T, U>);
+static_assert(not std::is_constructible_v<U, T>);
+static_assert(not std::is_assignable_v<U, T>);
+static_assert(std::is_nothrow_convertible_v<U, T>);
+static_assert(std::is_nothrow_constructible_v<T, U>);
+static_assert(std::is_nothrow_assignable_v<T, U>,
+              "non-noexcept const rebind from noexcept const");

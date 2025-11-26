@@ -43,13 +43,11 @@ suite noexcept_qualified = []
         {
             A_good x;
 
-            when("binding by name") = [&] {
-                expect(call({nontype<&A_good::g>, x}) == ch<'g'>);
-            };
+            when("binding by name") = [&]
+            { expect(call({nontype<&A_good::g>, x}) == ch<'g'>); };
 
-            when("binding by pointer") = [&] {
-                expect(call({nontype<&A_good::g>, &x}) == ch<'g'>);
-            };
+            when("binding by pointer") = [&]
+            { expect(call({nontype<&A_good::g>, &x}) == ch<'g'>); };
 
             when("binding by reference_wrapper") = [&]
             {
@@ -62,12 +60,37 @@ suite noexcept_qualified = []
         {
             A a;
 
-            then("you can treat member access as a nothrow call") = [&] {
-                expect(call({nontype<&A::data>, a}) == 99_i);
-            };
+            then("you can treat member access as a nothrow call") = [&]
+            { expect(call({nontype<&A::data>, a}) == 99_i); };
 
-            then("you can treat a noexcept free function as its memfn") = [&] {
-                expect(call({nontype<h_good>, a}) == ch<'h'>);
+            then("you can treat a noexcept free function as its memfn") = [&]
+            { expect(call({nontype<h_good>, a}) == ch<'h'>); };
+        };
+    };
+
+    feature("non-noexcept signature can rebind to noexcept signature") = []
+    {
+        given("non-noexcept function_ref initialized from noexcept") = []
+        {
+            function_ref<int() noexcept> r1 = f_good;
+            function_ref<int()> r2 = r1;
+
+            when("assign something else to the noexcept one") = [&]
+            {
+                A_good x;
+                r1 = {nontype<&A_good::g>, x};
+
+                then("the non-noexcept one is unaffected") = [&]
+                {
+                    expect(r1() == ch<'g'>);
+                    expect(r2() == free_function);
+                };
+
+                then("the non-noexcept one's behavior can be reset") = [&]
+                {
+                    r2 = r1;
+                    expect(r2() == ch<'g'>);
+                };
             };
         };
     };
@@ -95,3 +118,11 @@ static_assert(not std::is_constructible_v<U, nontype_t<&A::g>, A &>,
 static_assert(std::is_constructible_v<T, nontype_t<h>, A &>);
 static_assert(not std::is_constructible_v<U, nontype_t<h>, A &>,
               "explicit member function may throw");
+
+static_assert(not std::is_convertible_v<T, U>);
+static_assert(not std::is_constructible_v<U, T>);
+static_assert(not std::is_assignable_v<U, T>);
+static_assert(std::is_nothrow_convertible_v<U, T>);
+static_assert(std::is_nothrow_constructible_v<T, U>);
+static_assert(std::is_nothrow_assignable_v<T, U>,
+              "non-noexcept rebind from noexcept");

@@ -13,6 +13,7 @@ template<class Sig> struct _qual_fn_sig;
 template<class R, class... Args> struct _qual_fn_sig<R(Args...)>
 {
     using function = R(Args...);
+    using without_noexcept = function;
     static constexpr bool is_noexcept = false;
 
     template<class... T>
@@ -25,6 +26,7 @@ template<class R, class... Args> struct _qual_fn_sig<R(Args...)>
 template<class R, class... Args> struct _qual_fn_sig<R(Args...) noexcept>
 {
     using function = R(Args...);
+    using without_noexcept = function;
     static constexpr bool is_noexcept = true;
 
     template<class... T>
@@ -38,6 +40,7 @@ template<class R, class... Args>
 struct _qual_fn_sig<R(Args...) const> : _qual_fn_sig<R(Args...)>
 {
     template<class T> using cv = T const;
+    using without_noexcept = R(Args...) const;
 };
 
 template<class R, class... Args>
@@ -45,6 +48,7 @@ struct _qual_fn_sig<R(Args...) const noexcept>
     : _qual_fn_sig<R(Args...) noexcept>
 {
     template<class T> using cv = T const;
+    using without_noexcept = R(Args...) const;
 };
 
 struct _function_ref_base
@@ -85,6 +89,14 @@ struct _function_ref_base
 template<class Sig, class = typename _qual_fn_sig<Sig>::function>
 class function_ref; // freestanding
 
+template<class From, class To>
+inline constexpr bool _is_ref_convertible = false;
+
+template<class T, class U>
+inline constexpr bool _is_ref_convertible<function_ref<T>, function_ref<U>> =
+    std::is_convertible_v<typename _not_qualifying_this<T>::type &,
+                          typename _not_qualifying_this<U>::type &>;
+
 template<class Sig, class R, class... Args>
 class function_ref<Sig, R(Args...)> // freestanding
     : _function_ref_base
@@ -99,9 +111,15 @@ class function_ref<Sig, R(Args...)> // freestanding
     static constexpr bool is_invocable_using =
         signature::template is_invocable_using<T...>;
 
+    template<class F>
+    static constexpr bool is_convertible_from_specialization =
+        _is_ref_convertible<F, function_ref>;
+
     typedef R fwd_t(storage, _param_t<Args>...) noexcept(noex);
     fwd_t *fptr_ = nullptr;
     storage obj_;
+
+    friend class function_ref<typename signature::without_noexcept>;
 
   public:
     template<class F>
@@ -122,7 +140,7 @@ class function_ref<Sig, R(Args...)> // freestanding
 
     template<class F, class T = std::remove_reference_t<F>>
     constexpr function_ref(F &&f) noexcept
-        requires(_is_not_self<F, function_ref> and
+        requires(not is_convertible_from_specialization<std::remove_cv_t<T>> and
                  not std::is_member_pointer_v<T> and
                  is_invocable_using<cvref<T>>)
         : fptr_(
@@ -137,10 +155,17 @@ class function_ref<Sig, R(Args...)> // freestanding
           obj_(std::addressof(f))
     {}
 
+    template<class F>
+    constexpr function_ref(F f) noexcept
+        requires(_is_not_self<F, function_ref> and
+                 is_convertible_from_specialization<F>)
+        : fptr_(f.fptr_), obj_(f.obj_)
+    {}
+
     template<class T>
     function_ref &operator=(T)
-        requires(_is_not_self<T, function_ref> and not std::is_pointer_v<T> and
-                 _is_not_nontype_t<T>)
+        requires(not is_convertible_from_specialization<T> and
+                 not std::is_pointer_v<T> and _is_not_nontype_t<T>)
         = delete;
 
     template<auto f>
