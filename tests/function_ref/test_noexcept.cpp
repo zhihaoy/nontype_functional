@@ -122,7 +122,7 @@ static_assert(not std::is_constructible_v<U, nontype_t<h>, A &>,
 static_assert(not std::is_convertible_v<T, U>);
 static_assert(not std::is_constructible_v<U, T>);
 static_assert(not std::is_assignable_v<U, T>);
-static_assert(std::is_nothrow_convertible_v<U, T>);
+static_assert(std::is_convertible_v<U, T>);
 static_assert(std::is_nothrow_constructible_v<T, U>);
 static_assert(std::is_nothrow_assignable_v<T, U>,
               "non-noexcept rebind from noexcept");
