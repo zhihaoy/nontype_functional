@@ -14,6 +14,7 @@ template<class R, class... Args> struct _qual_fn_sig<R(Args...)>
 {
     using function = R(Args...);
     using without_noexcept = function;
+    using without_const = function;
     static constexpr bool is_noexcept = false;
 
     template<class... T>
@@ -27,6 +28,7 @@ template<class R, class... Args> struct _qual_fn_sig<R(Args...) noexcept>
 {
     using function = R(Args...);
     using without_noexcept = function;
+    using without_const = R(Args...) noexcept;
     static constexpr bool is_noexcept = true;
 
     template<class... T>
@@ -129,6 +131,7 @@ class function_ref<Sig, R(Args...)> // freestanding
     storage obj_;
 
     friend class function_ref<typename signature::without_noexcept>;
+    friend class function_ref<typename signature::without_const>;
     friend class function_ref<typename signature::function>;
 
   public:

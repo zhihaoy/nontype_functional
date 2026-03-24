@@ -98,6 +98,32 @@ suite const_noexcept_qualified = []
             };
         };
     };
+
+    feature(
+        "non-const noexcept signature can rebind to const noexcept signature") =
+        []
+    {
+        given(
+            "non-const noexcept function_ref initialized from const noexcept") =
+            []
+        {
+            D d1;
+            function_ref<int() const noexcept> r1 = d1;
+            function_ref<int() noexcept> r2 = r1;
+
+            when("assign something else to the const noexcept one") = [&]
+            {
+                A_nice h;
+                r1 = {nontype<&A_nice::h>, h};
+
+                then("the non-const noexcept one is unaffected") = [&]
+                {
+                    expect(r1() == 'h');
+                    expect(r2() == 22);
+                };
+            };
+        };
+    };
 };
 
 static_assert(
