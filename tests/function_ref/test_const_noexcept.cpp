@@ -89,6 +89,7 @@ static_assert(
 
 using T = function_ref<int() const>;
 using U = function_ref<int() const noexcept>;
+using V = function_ref<int() noexcept>;
 
 static_assert(not std::is_constructible_v<U, nontype_t<&A::data>, A>,
               "cannot bind rvalue");
@@ -115,3 +116,11 @@ static_assert(std::is_convertible_v<U, T>);
 static_assert(std::is_nothrow_constructible_v<T, U>);
 static_assert(std::is_nothrow_assignable_v<T, U>,
               "non-noexcept const rebind from noexcept const");
+
+static_assert(not std::is_convertible_v<T, V>);
+static_assert(not std::is_constructible_v<V, T>);
+static_assert(not std::is_assignable_v<V, T>);
+static_assert(std::is_convertible_v<U, V>);
+static_assert(std::is_nothrow_constructible_v<V, U>);
+static_assert(std::is_nothrow_assignable_v<V, U>,
+              "noexcept non-const rebind from noexcept const");

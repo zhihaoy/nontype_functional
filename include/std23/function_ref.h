@@ -97,6 +97,14 @@ inline constexpr bool _is_ref_convertible<function_ref<T>, function_ref<U>> =
     std::is_convertible_v<typename _not_qualifying_this<T>::type &,
                           typename _not_qualifying_this<U>::type &>;
 
+template<class From, class To>
+inline constexpr bool _is_as_immutable_as = false;
+
+template<class T, class U>
+inline constexpr bool _is_as_immutable_as<function_ref<T>, function_ref<U>> =
+    std::is_convertible_v<typename _qual_fn_sig<U>::template cv<int> &,
+                          typename _qual_fn_sig<T>::template cv<int> &>;
+
 template<class Sig, class R, class... Args>
 class function_ref<Sig, R(Args...)> // freestanding
     : _function_ref_base
@@ -113,13 +121,15 @@ class function_ref<Sig, R(Args...)> // freestanding
 
     template<class F>
     static constexpr bool is_convertible_from_specialization =
-        _is_ref_convertible<F, function_ref>;
+        _is_ref_convertible<F, function_ref> and
+        _is_as_immutable_as<F, function_ref>;
 
     typedef R fwd_t(storage, _param_t<Args>...) noexcept(noex);
     fwd_t *fptr_ = nullptr;
     storage obj_;
 
     friend class function_ref<typename signature::without_noexcept>;
+    friend class function_ref<typename signature::function>;
 
   public:
     template<class F>
