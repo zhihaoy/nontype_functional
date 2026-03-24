@@ -76,6 +76,54 @@ suite const_noexcept_qualified = []
             };
         };
     };
+
+    feature("non-const signature can rebind to const noexcept signature") = []
+    {
+        given("non-const function_ref initialized from const noexcept") = []
+        {
+            D d1;
+            function_ref<int() const noexcept> r1 = d1;
+            function_ref<int()> r2 = r1;
+
+            when("assign something else to the const noexcept one") = [&]
+            {
+                A_nice h;
+                r1 = {nontype<&A_nice::h>, h};
+
+                then("the non-const one is unaffected") = [&]
+                {
+                    expect(r1() == 'h');
+                    expect(r2() == 22);
+                };
+            };
+        };
+    };
+
+    feature(
+        "non-const noexcept signature can rebind to const noexcept signature") =
+        []
+    {
+        given(
+            "non-const noexcept function_ref initialized from const noexcept") =
+            []
+        {
+            D d1;
+            function_ref<int() const noexcept> r1 = d1;
+            function_ref<int() noexcept> r2 = r1;
+
+            when("assign something else to the const noexcept one") = [&]
+            {
+                A_nice h;
+                r1 = {nontype<&A_nice::h>, h};
+
+                then("the non-const noexcept one is unaffected") = [&]
+                {
+                    expect(r1() == 'h');
+                    expect(r2() == 22);
+                };
+            };
+        };
+    };
 };
 
 static_assert(
@@ -89,6 +137,7 @@ static_assert(
 
 using T = function_ref<int() const>;
 using U = function_ref<int() const noexcept>;
+using V = function_ref<int() noexcept>;
 
 static_assert(not std::is_constructible_v<U, nontype_t<&A::data>, A>,
               "cannot bind rvalue");
@@ -115,3 +164,11 @@ static_assert(std::is_convertible_v<U, T>);
 static_assert(std::is_nothrow_constructible_v<T, U>);
 static_assert(std::is_nothrow_assignable_v<T, U>,
               "non-noexcept const rebind from noexcept const");
+
+static_assert(not std::is_convertible_v<T, V>);
+static_assert(not std::is_constructible_v<V, T>);
+static_assert(not std::is_assignable_v<V, T>);
+static_assert(std::is_convertible_v<U, V>);
+static_assert(std::is_nothrow_constructible_v<V, U>);
+static_assert(std::is_nothrow_assignable_v<V, U>,
+              "noexcept non-const rebind from noexcept const");

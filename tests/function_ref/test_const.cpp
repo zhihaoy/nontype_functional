@@ -42,13 +42,11 @@ suite const_qualified = []
         {
             A a;
 
-            when("binding by name") = [&] {
-                expect(call({nontype<&A::k>, a}) == ch<'k'>);
-            };
+            when("binding by name") = [&]
+            { expect(call({nontype<&A::k>, a}) == ch<'k'>); };
 
-            when("binding by pointer") = [&] {
-                expect(call({nontype<&A::k>, &a}) == ch<'k'>);
-            };
+            when("binding by pointer") = [&]
+            { expect(call({nontype<&A::k>, &a}) == ch<'k'>); };
 
             when("binding by reference_wrapper") = [&]
             {
@@ -56,8 +54,28 @@ suite const_qualified = []
                 expect(call({nontype<&A::k>, r}) == ch<'k'>);
             };
 
-            when("binding free function by name") = [&] {
-                expect(call({nontype<h>, a}) == free_function);
+            when("binding free function by name") = [&]
+            { expect(call({nontype<h>, a}) == free_function); };
+        };
+    };
+
+    feature("non-const signature can rebind to const signature") = []
+    {
+        given("non-const function_ref initialized from const") = []
+        {
+            C c1;
+            function_ref<int() const> r1 = c1;
+            function_ref<int()> r2 = r1;
+
+            when("assign something else to the const one") = [&]
+            {
+                r1 = f;
+
+                then("the non-const one is unaffected") = [&]
+                {
+                    expect(r1() == free_function);
+                    expect(r2() == const_);
+                };
             };
         };
     };
@@ -106,3 +124,9 @@ static_assert(not std::is_constructible_v<T, nontype_t<h>, A const *>);
 
 static_assert(not std::is_constructible_v<U, nontype_t<h>, A *>);
 static_assert(not std::is_constructible_v<U, nontype_t<h>, A const *>);
+
+static_assert(not std::is_assignable_v<U, T>);
+static_assert(std::is_convertible_v<U, T>);
+static_assert(std::is_nothrow_constructible_v<T, U>);
+static_assert(std::is_nothrow_assignable_v<T, U>,
+              "non-const rebind from const");
