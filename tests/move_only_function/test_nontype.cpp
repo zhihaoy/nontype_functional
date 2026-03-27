@@ -1,6 +1,8 @@
 #include "common_callables.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <optional>
+#endif
 
 using T = move_only_function<int() const>;
 
