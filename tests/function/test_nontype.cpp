@@ -1,7 +1,9 @@
 #include "common_callables.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <memory>
 #include <optional>
+#endif
 
 namespace
 {
