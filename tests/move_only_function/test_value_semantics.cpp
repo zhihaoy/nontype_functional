@@ -1,6 +1,8 @@
 #include "common_callables.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <memory>
+#endif
 
 class move_counter
 {

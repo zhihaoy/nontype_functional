@@ -3,9 +3,11 @@
 
 #include "__functional_base.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <memory>
 #include <new>
 #include <utility>
+#endif
 
 namespace std23
 {
@@ -93,7 +95,7 @@ struct _full_fn_sig<R(Args...) const && noexcept>
     : _ref_quals_fn_sig<R(Args...) const &&>, _noex_traits<true>
 {};
 
-constexpr inline struct
+constexpr inline struct _take_reference_t
 {
     constexpr auto operator()(auto &&rhs) const
     {

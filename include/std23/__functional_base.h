@@ -1,8 +1,10 @@
 #ifndef INCLUDE_STD23____FUNCTIONAL__BASE
 #define INCLUDE_STD23____FUNCTIONAL__BASE
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <functional>
 #include <utility>
+#endif
 
 namespace std23
 {

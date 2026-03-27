@@ -3,7 +3,9 @@
 
 #include "__functional_base.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <cassert>
+#endif
 
 namespace std23
 {

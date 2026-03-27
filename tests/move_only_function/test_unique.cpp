@@ -1,9 +1,11 @@
 #include "common_callables.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <string_view>
+#endif
 
 class inlined_fixed_string
 {
