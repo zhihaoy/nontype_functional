@@ -1,9 +1,11 @@
 #include "common_callables.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <numeric>
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 using namespace std::string_view_literals;
 

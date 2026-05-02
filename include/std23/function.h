@@ -3,8 +3,10 @@
 
 #include "__functional_base.h"
 
+#ifndef NONTYPE_FUNCTIONAL_MODULE
 #include <memory>
 #include <new>
+#endif
 
 namespace std23
 {
