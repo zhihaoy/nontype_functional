@@ -76,7 +76,7 @@ endmacro()
 clang_affected_by_issue_120812(_WANTS_CXX23)
 
 if(_WANTS_CXX23)
-    message(INFO "Switching to C++23 mode")
+    message(STATUS "Switching to C++23 mode")
     target_compile_features(nontype_functional INTERFACE cxx_std_23)
 else()
     target_compile_features(nontype_functional INTERFACE cxx_std_20)
