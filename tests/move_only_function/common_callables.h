@@ -47,3 +47,11 @@ struct A
 };
 
 int h(A);
+
+struct Tracker
+{
+    bool &dtor_called;
+
+    ~Tracker() { dtor_called = true; }
+    int operator()() const noexcept;
+};

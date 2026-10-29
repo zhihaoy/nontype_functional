@@ -45,5 +45,23 @@ suite basics = []
 
             when("called") = [&] { expect(fn() == 42_i); };
         };
+
+        given("a target that can report whether it has been destroyed") = []
+        {
+            bool dtor_called = false;
+            move_only_function<int()> fn(std::in_place_type<Tracker>,
+                                         dtor_called);
+
+            when("move_only_function is reset") = [&]
+            {
+                fn = nullptr;
+
+                then("the target is destroyed") = [&]
+                {
+                    expect(!fn);
+                    expect(dtor_called);
+                };
+            };
+        };
     };
 };
