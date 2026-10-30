@@ -273,7 +273,8 @@ template<bool noex, class R, class... Args> struct _callable_trait
 
     template<auto f, class T>
     static inline constinit vtable const boxed_callable_target{
-        .call = [](handle this_, Args... args) noexcept(noex) -> R {
+        .call = [](handle this_, Args... args) noexcept(noex) -> R
+        {
             return std23::invoke_r<R>(f, get<T>(this_),
                                       static_cast<Args>(args)...);
         },
@@ -430,8 +431,7 @@ class move_only_function<S, R(Args...)>
                                 Inits &&...inits) noexcept( //
         std::is_nothrow_constructible_v<std::unique_ptr<T>, Inits...>)
         requires std::is_base_of_v<C, T> and is_callable_as_if_from<f, T *> and
-                 std::is_constructible_v<std::unique_ptr<T>,
-                                         Inits...>
+                 std::is_constructible_v<std::unique_ptr<T>, Inits...>
         : move_only_function(t,
                              std::unique_ptr<T>(std::forward<Inits>(inits)...))
     {}
@@ -453,6 +453,12 @@ class move_only_function<S, R(Args...)>
 
     move_only_function(move_only_function &&) = default;
     move_only_function &operator=(move_only_function &&) = default;
+
+    move_only_function &operator=(nullptr_t) noexcept
+    {
+        std::exchange(vtbl_, trait::abstract_base).get().destroy(obj_.val);
+        return *this;
+    }
 
     void swap(move_only_function &other) noexcept
     {
@@ -488,25 +494,25 @@ class move_only_function<S, R(Args...)>
         return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
     }
 
-    R operator()(Args... args) &noexcept(noex)
+    R operator()(Args... args) & noexcept(noex)
         requires(!is_const and is_lvalue_only and !is_rvalue_only)
     {
         return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
     }
 
-    R operator()(Args... args) const &noexcept(noex)
+    R operator()(Args... args) const & noexcept(noex)
         requires(is_const and is_lvalue_only and !is_rvalue_only)
     {
         return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
     }
 
-    R operator()(Args... args) &&noexcept(noex)
+    R operator()(Args... args) && noexcept(noex)
         requires(!is_const and !is_lvalue_only and is_rvalue_only)
     {
         return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);
     }
 
-    R operator()(Args... args) const &&noexcept(noex)
+    R operator()(Args... args) const && noexcept(noex)
         requires(is_const and !is_lvalue_only and is_rvalue_only)
     {
         return vtbl_.get().call(obj_.val, std::forward<Args>(args)...);

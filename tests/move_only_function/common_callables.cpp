@@ -14,3 +14,8 @@ int h(A)
 {
     return BODYN(free_function);
 }
+
+int Tracker::operator()() const noexcept
+{
+    return BODYN(const_);
+}
